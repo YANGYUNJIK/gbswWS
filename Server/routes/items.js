@@ -1,17 +1,25 @@
-// Server/routes/items.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Item = require('../models/Item');
+const Item = require("../models/Item");
 
-router.get('/', async (req, res) => {
-  const items = await Item.find();
-  res.json(items);
+router.get("/", async (req, res) => {
+  try {
+    const items = await Item.find();
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ error: "아이템 불러오기 실패" });
+  }
 });
 
-router.post('/', async (req, res) => {
-  const newItem = new Item(req.body);
-  await newItem.save();
-  res.status(201).json(newItem);
+router.post("/", async (req, res) => {
+  try {
+    const { name, type, image, stock } = req.body;
+    const newItem = new Item({ name, type, image, stock });
+    await newItem.save();
+    res.status(201).json(newItem);
+  } catch (err) {
+    res.status(500).json({ error: "아이템 등록 실패" });
+  }
 });
 
-module.exports = router; // ✅ 이 줄 꼭 있어야 함
+module.exports = router;

@@ -8,6 +8,11 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app); // ← app을 http 서버로 감싸기
+
+const itemsRoutes = require("./routes/items");
+const ordersRoutes = require("./routes/orders");
+
+
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -15,9 +20,15 @@ const io = new Server(server, {
   },
 });
 
-// 미들웨어
+// 라우터보다 미들웨어 먼저
 app.use(cors());
 app.use(express.json());
+
+
+// 라우터 등록
+app.use("/items", itemsRoutes);     // ✅ 이렇게 되어 있어야 함
+app.use("/orders", ordersRoutes);   // ✅ 이렇게 되어 있어야 함
+
 
 // MongoDB 연결
 mongoose.connect(process.env.MONGODB_URI)

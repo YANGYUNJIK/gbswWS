@@ -1,11 +1,10 @@
-// Server/models/Item.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const ItemSchema = new mongoose.Schema({
+const itemSchema = new mongoose.Schema({
   name: String,
-  type: String,         // 'drink' or 'snack'
-  image: String,        // Cloudinary 이미지 URL
-  stock: { type: Boolean, default: true },
-});
+  type: String, // "drink" 또는 "snack"
+  image: String,
+  stock: Boolean
+}, { timestamps: true });
 
-module.exports = mongoose.model('Item', ItemSchema);
+module.exports = mongoose.model("Item", itemSchema);

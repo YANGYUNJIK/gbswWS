@@ -1,18 +1,18 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
-  View, Text, FlatList, StyleSheet
+  FlatList, StyleSheet,
+  Text,
+  View
 } from "react-native";
+import { io } from "socket.io-client"; // ✅ socket.io 클라이언트 임포트
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
 const SERVER_URL = "https://gbswws.onrender.com";
+const socket = io(SERVER_URL); // ✅ 서버와 실시간 연결
 
 export default function StudentOrdersScreen() {
   const { studentName } = useContext(StudentInfoContext);
   const [orders, setOrders] = useState([]);
-
-  useEffect(() => {
-    if (studentName) fetchOrders();
-  }, [studentName]);
 
   const fetchOrders = async () => {
     try {
@@ -23,6 +23,30 @@ export default function StudentOrdersScreen() {
       console.error("주문 목록 가져오기 실패", err);
     }
   };
+
+  useEffect(() => {
+    if (!studentName) return;
+
+    fetchOrders(); // 최초 데이터 불러오기
+
+    // ✅ 소켓 연결 이벤트
+    socket.on("connect", () => {
+      console.log("🟢 소켓 연결됨:", socket.id);
+    });
+
+    // ✅ 실시간 상태 업데이트 받기
+    socket.on("orderUpdated", (updatedOrder) => {
+      if (updatedOrder.studentName === studentName) {
+        alert(`📢 ${updatedOrder.menu} 신청이 ${updatedOrder.status} 처리되었습니다`);
+        fetchOrders(); // 새로고침
+      }
+    });
+
+    // ✅ 컴포넌트 언마운트 시 소켓 이벤트 정리
+    return () => {
+      socket.off("orderUpdated");
+    };
+  }, [studentName]);
 
   const getStatusColor = (status) => {
     switch (status) {

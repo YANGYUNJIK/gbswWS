@@ -1,6 +1,10 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
-  View, Text, Image, TextInput, TouchableOpacity, Modal, StyleSheet
+  Image,
+  Modal, StyleSheet,
+  Text,
+  TextInput, TouchableOpacity,
+  View
 } from "react-native";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
