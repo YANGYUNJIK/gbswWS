@@ -20,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB 연결
-mongoose.connect("mongodb+srv://admin:admin1234@cluster0.v5opc9e.mongodb.net/snackApp?retryWrites=true&w=majority")
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB 연결됨"))
   .catch((err) => console.log("❌ MongoDB 연결 실패", err));
 
