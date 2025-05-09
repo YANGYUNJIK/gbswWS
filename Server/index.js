@@ -1,3 +1,5 @@
+require("dotenv").config(); // 반드시 index.js 맨 위에 있어야 함
+
 const express = require("express");
 const http = require("http"); // ← socket.io와 함께 필요
 const { Server } = require("socket.io");
@@ -17,8 +19,10 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+console.log("📦 MONGODB_URI =", process.env.MONGODB_URI);
+
 // MongoDB 연결
-mongoose.connect("your_mongodb_url_here")
+mongoose.connect("mongodb+srv://admin:admin1234@cluster0.v5opc9e.mongodb.net/snackApp?retryWrites=true&w=majority")
   .then(() => console.log("✅ MongoDB 연결됨"))
   .catch((err) => console.log("❌ MongoDB 연결 실패", err));
 
