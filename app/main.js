@@ -52,7 +52,7 @@ export default function MainScreen() {
         <RNPickerSelect
           onValueChange={(value) => setCategory(value)}
           value={category}
-          placeholder={{ label: "카테고리 선택", value: null }}
+          placeholder={{ label: "직종을 선택하세요", value: null }}
           useNativeAndroidPickerStyle={false}
           items={categories.map((cat) => ({ label: cat, value: cat }))}
           style={pickerSelectStyles}
@@ -70,7 +70,7 @@ export default function MainScreen() {
             setStudentModalVisible(true);
           }}
         >
-          <Text style={styles.buttonText}>학생</Text>
+          <Text style={styles.buttonText}>👩‍🎓 학생</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -83,7 +83,7 @@ export default function MainScreen() {
             setTeacherModalVisible(true);
           }}
         >
-          <Text style={styles.buttonText}>선생님</Text>
+          <Text style={styles.buttonText}>👨‍🏫 선생님</Text>
         </TouchableOpacity>
       </View>
 
@@ -134,58 +134,122 @@ export default function MainScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20, backgroundColor: "#fff" },
-  image: { width: 220, height: 180, resizeMode: "contain", marginBottom: 30 },
-  label: { fontSize: 16, marginBottom: 8 },
-  dropdownWrapper: { marginBottom: 30 },
-  buttonRow: { flexDirection: "row", marginTop: 20, gap: 20 },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#f0f5f9",
   },
-  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  image: {
+    width: 220,
+    height: 180,
+    resizeMode: "contain",
+    marginBottom: 10,
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+    color: "#333",
+  },
+  dropdownWrapper: {
+    marginBottom: 20,
+    width: "15%",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    marginTop: 20,
+    gap: 20,
+  },
+  button: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
   modalWrapper: {
-    flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.4)"
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   modalBox: {
-    width: 300, backgroundColor: "white", padding: 20, borderRadius: 10, alignItems: "center"
+    width: 300,
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 12,
+    alignItems: "center",
   },
   input: {
-    borderWidth: 1, borderColor: "#ccc", width: "100%", marginTop: 10, padding: 10, borderRadius: 6
+    borderWidth: 1,
+    borderColor: "#ccc",
+    width: "100%",
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 8,
   },
   modalButton: {
     backgroundColor: "#5DBB9D",
     marginTop: 15,
-    padding: 10,
-    borderRadius: 6,
+    padding: 12,
+    borderRadius: 8,
     width: "100%",
-    alignItems: "center"
+    alignItems: "center",
   },
-  modalButtonText: { color: "white", fontWeight: "bold" },
+  modalButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
 });
 
 const pickerSelectStyles = {
   inputIOS: {
     fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 8,
+    borderRadius: 12,
     color: 'black',
-    width: 250,
+    backgroundColor: '#fff',
+    width: '100%',
     textAlign: 'center',
   },
   inputAndroid: {
     fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 8,
+    borderRadius: 12,
     color: 'black',
-    width: 250,
+    backgroundColor: '#fff',
+    width: '100%',
     textAlign: 'center',
+  },
+  inputWeb: {
+    fontSize: 18,
+    height: 35,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    color: 'black',
+    width: '100%',
+    textAlign: 'center',
+    appearance: 'none', // ✅ 선택값 가려지는 문제 해결
+    MozAppearance: 'none', // Firefox용
+    WebkitAppearance: 'none', // Safari/Chrome용
   },
 };

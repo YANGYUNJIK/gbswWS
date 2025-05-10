@@ -135,22 +135,27 @@ export default function ManageItemsScreen() {
     <View style={styles.card}>
       <Image
         source={{ uri: item.image || "https://via.placeholder.com/100?text=No+Image" }}
-        style={styles.image}
+        style={styles.cardImage}
       />
-      <View style={{ flex: 1 }}>
-        <Text>{item.name} ({item.type === "drink" ? "음료" : "간식"})</Text>
-        <Text style={{ color: item.stock ? "green" : "red" }}>
-          {item.stock ? "재고 있음" : "품절"}
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>
+          {item.name} ({item.type === "drink" ? "음료" : "간식"})
+        </Text>
+        <Text style={[styles.cardStock, { color: item.stock ? "green" : "red" }]}>
+          재고: {item.stock ? "있음" : "품절"}
         </Text>
       </View>
-      <TouchableOpacity onPress={() => handleEdit(item)} style={styles.editBtn}>
-        <Text>✏️</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.deleteBtn}>
-        <Text>🗑️</Text>
-      </TouchableOpacity>
+      <View style={styles.cardButtons}>
+        <TouchableOpacity onPress={() => handleEdit(item)} style={styles.editBtn}>
+          <Text>✏️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.deleteBtn}>
+          <Text>🗑️</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
+
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
@@ -212,22 +217,100 @@ export default function ManageItemsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-  input: {
-    borderWidth: 1, borderColor: "#ccc", borderRadius: 5, padding: 10, marginVertical: 10
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#333",
+    textAlign: "center",
   },
-  toggle: { marginVertical: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#bbb",
+    borderRadius: 10,
+    padding: 12,
+    marginVertical: 10,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  toggle: {
+    marginVertical: 12,
+    fontSize: 16,
+    color: "#555",
+  },
   imagePick: {
-    borderWidth: 1, borderColor: "#aaa", padding: 10, borderRadius: 5, alignItems: "center"
+    borderWidth: 1,
+    borderColor: "#aaa",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
+    marginVertical: 10,
   },
   button: {
-    backgroundColor: "#4CAF50", padding: 12, borderRadius: 8, alignItems: "center", marginTop: 10
+    backgroundColor: "#4CAF50",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   card: {
-    flexDirection: "row", alignItems: "center", padding: 10, borderWidth: 1,
-    borderColor: "#ccc", borderRadius: 8, marginVertical: 5
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    marginVertical: 6,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  image: { width: 50, height: 50, marginRight: 10, borderRadius: 5 },
-  editBtn: { marginLeft: 10 },
-  deleteBtn: { marginLeft: 10 }
+  cardImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 8,
+    backgroundColor: "#eee",
+    marginRight: 12,
+  },
+  cardContent: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  cardStock: {
+    fontSize: 14,
+  },
+  cardButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  editBtn: {
+    padding: 6,
+    backgroundColor: "#e3f2fd",
+    borderRadius: 6,
+  },
+  deleteBtn: {
+    padding: 6,
+    backgroundColor: "#ffebee",
+    borderRadius: 6,
+  },
+  image: {
+    width: 60,
+    height: 60,
+    marginRight: 14,
+    borderRadius: 8,
+    backgroundColor: "#eee",
+  },
 });
