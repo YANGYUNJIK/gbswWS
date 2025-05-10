@@ -160,71 +160,77 @@ export default function ManageItemsScreen() {
   );
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={styles.header}>📦 항목 등록 / 수정</Text>
+    <View style={styles.container}>
+      <View style={{ flex: 1, padding: 20 }}>
+        <Text style={styles.header}>📦 항목 등록 / 수정</Text>
 
-      <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.button}>
-        <Text style={{ color: "white", fontSize: 16 }}>+ 항목 추가</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.button}>
+          <Text style={{ color: "white", fontSize: 16 }}>+ 항목 추가</Text>
+        </TouchableOpacity>
 
-      {items.length === 0 ? (
-        <Text style={{ marginTop: 20, textAlign: "center", color: "gray" }}>
-          등록된 항목이 없습니다.
-        </Text>
-      ) : (
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item._id}
-          renderItem={renderItem}
-        />
-      )}
+        {items.length === 0 ? (
+          <Text style={{ marginTop: 20, textAlign: "center", color: "gray" }}>
+            등록된 항목이 없습니다.
+          </Text>
+        ) : (
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item._id}
+            renderItem={renderItem}
+          />
+        )}
 
-      {/* 등록/수정 모달 */}
-      <Modal visible={modalVisible} animationType="fade" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <TextInput
-              placeholder="이름"
-              value={name}
-              onChangeText={setName}
-              style={styles.input}
-            />
+        {/* 등록/수정 모달 */}
+        <Modal visible={modalVisible} animationType="fade" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <TextInput
+                placeholder="이름"
+                value={name}
+                onChangeText={setName}
+                style={styles.input}
+              />
 
-            <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}>
-              <Text style={styles.toggle}>종류: {type === "drink" ? "음료" : "간식"} (터치 변경)</Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}>
+                <Text style={styles.toggle}>종류: {type === "drink" ? "음료" : "간식"} (터치 변경)</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity onPress={pickImage} style={styles.imagePick}>
-              <Text>📷 이미지 선택</Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={pickImage} style={styles.imagePick}>
+                <Text>📷 이미지 선택</Text>
+              </TouchableOpacity>
 
-            {image && (
-              <View style={{ alignItems: "center", marginTop: 10 }}>
-                <Image source={{ uri: image }} style={styles.previewImage} />
-              </View>
-            )}
+              {image && (
+                <View style={{ alignItems: "center", marginTop: 10 }}>
+                  <Image source={{ uri: image }} style={styles.previewImage} />
+                </View>
+              )}
 
-            <TouchableOpacity onPress={() => setStock(!stock)} style={styles.toggle}>
-              <Text>재고: {stock ? "있음" : "품절"} (터치 변경)</Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => setStock(!stock)} style={styles.toggle}>
+                <Text>재고: {stock ? "있음" : "품절"} (터치 변경)</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-              <Text style={{ color: "white", fontSize: 16 }}>
-                {editId ? "수정하기" : "등록하기"}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+                <Text style={{ color: "white", fontSize: 16 }}>
+                  {editId ? "수정하기" : "등록하기"}
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity onPress={resetForm} style={{ marginTop: 15, alignItems: "center" }}>
-              <Text style={{ color: "gray" }}>닫기</Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={resetForm} style={{ marginTop: 15, alignItems: "center" }}>
+                <Text style={{ color: "gray" }}>닫기</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#f0f4f8",
+    padding: 10,
+  },
   header: { fontSize: 24, fontWeight: "bold", marginBottom: 16, color: "#333", textAlign: "center" },
   input: {
     borderWidth: 1, borderColor: "#bbb", borderRadius: 10, padding: 12,

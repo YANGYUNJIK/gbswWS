@@ -1,7 +1,7 @@
 // ✅ /app/student/orders.js
 import { useContext, useEffect, useState } from "react";
 import {
-  FlatList, StyleSheet, Text, View
+  FlatList, Image, StyleSheet, Text, View
 } from "react-native";
 import { io } from "socket.io-client";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
@@ -34,7 +34,7 @@ export default function StudentOrdersScreen() {
 
     socket.on("orderUpdated", (updatedOrder) => {
       if (updatedOrder.studentName === studentName) {
-        alert(`📢 '${updatedOrder.menu}' 신청이 '${updatedOrder.status}' 처리되었습니다.`);
+        alert(`📢 '${updatedOrder.menu}' 신청이 '${translateStatus(updatedOrder.status)}' 처리되었습니다.`);
         fetchOrders();
       }
     });
@@ -44,22 +44,38 @@ export default function StudentOrdersScreen() {
     };
   }, [studentName]);
 
+  const translateStatus = (status) => {
+    switch (status) {
+      case "accepted": return "수락됨";
+      case "rejected": return "거절됨";
+      default: return "대기중";
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
-      case "수락됨": return "green";
-      case "거부됨": return "red";
+      case "accepted": return "green";
+      case "rejected": return "red";
       default: return "gray";
     }
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Text style={styles.menu}>{item.menu}</Text>
-      <Text>수량: {item.quantity}</Text>
-      <Text style={{ fontWeight: "bold", color: getStatusColor(item.status) }}>
-        상태: {item.status || "대기중"}
-      </Text>
-      <Text style={styles.time}>{new Date(item.createdAt).toLocaleString()}</Text>
+      <View style={styles.cardRow}>
+        <Image
+          source={{ uri: item.image || "https://via.placeholder.com/60" }}
+          style={styles.image}
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.menu}>{item.menu}</Text>
+          <Text style={styles.detail}>수량: {item.quantity}</Text>
+          <View style={styles.statusRow}>
+            <Text style={[styles.status, { color: getStatusColor(item.status) }]}>상태: {translateStatus(item.status)}</Text>
+            <Text style={styles.time}>{new Date(item.createdAt).toLocaleString()}</Text>
+          </View>
+        </View>
+      </View>
     </View>
   );
 
@@ -76,12 +92,62 @@ export default function StudentOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  header: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-  card: {
-    backgroundColor: "#fff", padding: 12, borderRadius: 10, marginBottom: 10,
-    shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4, elevation: 2
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f4f8",
+    padding: 16,
   },
-  menu: { fontSize: 18, fontWeight: "bold" },
-  time: { fontSize: 12, color: "#888", marginTop: 5 }
+  header: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+  },
+  card: {
+    alignSelf: "center",
+    width: "60%",
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  image: {
+    width: 60,
+    height: 60,
+    marginRight: 12,
+    borderRadius: 6,
+    backgroundColor: "#eee",
+  },
+  menu: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  detail: {
+    fontSize: 14,
+    color: "#555",
+  },
+  statusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  status: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  time: {
+    fontSize: 12,
+    color: "#888",
+  },
 });

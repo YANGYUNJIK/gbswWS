@@ -1,13 +1,17 @@
 import { useContext, useEffect, useState } from "react";
 import {
+  Dimensions,
   FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View
 } from "react-native";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
 const SERVER_URL = "https://gbswws.onrender.com";
+const screenWidth = Dimensions.get("window").width;
+const CARD_GAP = 65;
+const CARD_WIDTH = (screenWidth - CARD_GAP * 5) / 4;
 
 export default function DrinkScreen() {
-  const { studentName, category } = useContext(StudentInfoContext); // ✅ category 불러오기
+  const { studentName, category } = useContext(StudentInfoContext);
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -45,11 +49,8 @@ export default function DrinkScreen() {
       userJob: category,
       menu: selectedItem.name,
       quantity,
-      // ✅ 서버에서 자동으로 처리하는 createdAt, status는 보내지 않아도 됨
-      image: selectedItem.image, // ✅ 반드시 포함되어야 함
+      image: selectedItem.image,
     };
-
-    //console.log("✅ 선택된 이미지:", selectedItem.image);
 
     try {
       const res = await fetch(`${SERVER_URL}/orders`, {
@@ -68,8 +69,18 @@ export default function DrinkScreen() {
     }
   };
 
+  const filledItems = [...items];
+  const remainder = items.length % 4;
+  if (remainder !== 0) {
+    const emptySlots = 4 - remainder;
+    for (let i = 0; i < emptySlots; i++) {
+      filledItems.push(null);
+    }
+  }
 
   const renderItem = ({ item }) => {
+    if (!item) return <View style={styles.cardPlaceholder} />;
+
     const isSoldOut = item.stock === false;
 
     return (
@@ -92,40 +103,40 @@ export default function DrinkScreen() {
     );
   };
 
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>음료 신청</Text>
+      <Text style={styles.title}>• 음료 신청</Text>
       <FlatList
-        data={items}
-        keyExtractor={(item) => item._id}
+        data={filledItems}
+        keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         numColumns={4}
-        columnWrapperStyle={{ justifyContent: "flex-start" }}
+        columnWrapperStyle={{ paddingHorizontal: CARD_GAP, justifyContent: "space-between" }}
+        contentContainerStyle={{ paddingBottom: 20 }}
       />
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalBackground}>
-          <View style={styles.modalBox}>
-            <Text style={{ fontSize: 18, marginBottom: 10 }}>
-              {selectedItem?.name} 신청
+      <Modal visible={modalVisible} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>
+              {selectedItem?.name}
             </Text>
 
-            <Text>개수 선택:</Text>
-            <View style={styles.dropdown}>
-              {[...Array(10)].map((_, i) => (
-                <TouchableOpacity key={i} onPress={() => setQuantity(i + 1)}>
-                  <Text style={quantity === i + 1 ? styles.selected : null}>
-                    {i + 1}개
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.quantityControl}>
+              <TouchableOpacity onPress={() => setQuantity((prev) => Math.max(1, prev - 1))}>
+                <Text style={styles.arrow}>{"<"}</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.quantityText}>{quantity}개</Text>
+
+              <TouchableOpacity onPress={() => setQuantity((prev) => Math.min(10, prev + 1))}>
+                <Text style={styles.arrow}>{">"}</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity onPress={handleSubmit} style={styles.button}>
               <Text style={styles.buttonText}>신청하기</Text>
             </TouchableOpacity>
-
 
             <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 10 }}>
               <Text style={{ color: "gray" }}>닫기</Text>
@@ -138,27 +149,31 @@ export default function DrinkScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f4f8",
+    padding: 10,
+  },
+  title: { fontSize: 20, fontWeight: "bold", marginBottom: 20, marginTop: 10 },
   card: {
-    width: "23%", margin: "1%",
-    borderWidth: 1, borderColor: "#ccc", padding: 8, borderRadius: 8, alignItems: "center"
+    width: CARD_WIDTH,
+    marginBottom: 35,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    backgroundColor: "#fff",
+    elevation: 2,
+    minHeight: 150,
+    justifyContent: "center"
   },
-  image: { width: 60, height: 60, marginBottom: 5 },
+  cardPlaceholder: {
+    width: CARD_WIDTH,
+    marginBottom: 20,
+  },
+  image: { width: 100, height: 100, marginBottom: 8 },
   name: { textAlign: "center" },
-  modalBackground: {
-    flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.3)"
-  },
-  modalBox: {
-    width: "80%", backgroundColor: "white", padding: 20, borderRadius: 10
-  },
-  dropdown: {
-    flexDirection: "row", flexWrap: "wrap", gap: 10, marginVertical: 10
-  },
-  selected: { fontWeight: "bold", color: "blue" },
-  button: {
-    backgroundColor: "#4CAF50", padding: 10, borderRadius: 8, alignItems: "center"
-  },
   soldOutBadge: {
     position: "absolute",
     top: 4,
@@ -174,8 +189,46 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    width: 300,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  quantityControl: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  arrow: {
+    fontSize: 28,
+    paddingHorizontal: 20,
+    color: "#4A90E2",
+  },
+  quantityText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    minWidth: 60,
+    textAlign: "center",
+  },
   button: {
-    backgroundColor: "#5DBB9D", // ← 여기!
+    backgroundColor: "#5DBB9D",
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -185,10 +238,9 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   buttonText: {
-    color: "#fff",         // ✅ 흰색
+    color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
     textAlign: "center",
   },
-
 });

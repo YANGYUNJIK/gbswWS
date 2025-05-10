@@ -120,6 +120,7 @@ export default function AdminOrdersScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "#f0f4f8",
     padding: 16,
   },
   text: {

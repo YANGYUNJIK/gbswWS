@@ -110,7 +110,11 @@ export default function AdminDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f0f4f8",
+    padding: 20,
+  },
   header: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
   stat: { fontSize: 16, marginVertical: 3 },
   buttons: { marginTop: 30 },

@@ -1,7 +1,7 @@
-import React, { useContext } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { StudentInfoContext } from "../context/StudentInfoContext";
 import { useRouter } from "expo-router";
+import { useContext } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StudentInfoContext } from "../context/StudentInfoContext";
 
 export default function StudentMenu() {
   const { studentName, category } = useContext(StudentInfoContext);
@@ -9,24 +9,26 @@ export default function StudentMenu() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>{studentName}님, 어떤 항목을 신청하시겠어요?</Text>
+      <Text style={styles.header}>
+        먹은 만큼 밥값 해야제?
+      </Text>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { backgroundColor: "#5DBB9D" }]}
         onPress={() => router.push("/student/drink")}
       >
         <Text style={styles.buttonText}>🥤 음료 신청</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { backgroundColor: "#5DBB9D" }]}
         onPress={() => router.push("/student/snack")}
       >
         <Text style={styles.buttonText}>🍪 간식 신청</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.buttonSecondary}
+        style={[styles.button, { backgroundColor: "#5DBB9D" }]}
         onPress={() => router.push("/student/orders")}
       >
         <Text style={styles.buttonText}>📄 신청 내역 보기</Text>
@@ -36,13 +38,29 @@ export default function StudentMenu() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-  header: { fontSize: 20, fontWeight: "bold", marginBottom: 30, textAlign: "center" },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f4f8",
+    padding: 20,
+  },
+  header: {
+    fontSize: 22, fontWeight: "bold", marginBottom: 40, textAlign: "center", color: "#333",
+  },
   button: {
-    backgroundColor: "#4CAF50", padding: 15, borderRadius: 10, marginVertical: 10, width: "80%", alignItems: "center"
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginVertical: 10,
+    width: "25%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  buttonSecondary: {
-    backgroundColor: "#2196F3", padding: 15, borderRadius: 10, marginTop: 30, width: "80%", alignItems: "center"
+  buttonText: {
+    color: "white", fontWeight: "bold", fontSize: 17,
   },
-  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 }
 });
