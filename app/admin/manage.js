@@ -6,9 +6,10 @@ import {
   Modal,
   Platform,
   StyleSheet,
-  Text, TextInput,
+  Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { io } from "socket.io-client";
 
@@ -133,10 +134,12 @@ export default function ManageItemsScreen() {
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Image
-        source={{ uri: item.image || "https://via.placeholder.com/100?text=No+Image" }}
-        style={styles.cardImage}
-      />
+      <View style={styles.cardImageWrapper}>
+        <Image
+          source={{ uri: item.image || "https://via.placeholder.com/100?text=No+Image" }}
+          style={styles.cardImage}
+        />
+      </View>
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>
           {item.name} ({item.type === "drink" ? "음료" : "간식"})
@@ -156,13 +159,12 @@ export default function ManageItemsScreen() {
     </View>
   );
 
-
   return (
     <View style={{ flex: 1, padding: 20 }}>
-      <Text style={styles.header}>항목 등록 / 수정</Text>
+      <Text style={styles.header}>📦 항목 등록 / 수정</Text>
 
       <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.button}>
-        <Text style={{ color: "white" }}>+ 항목 추가</Text>
+        <Text style={{ color: "white", fontSize: 16 }}>+ 항목 추가</Text>
       </TouchableOpacity>
 
       {items.length === 0 ? (
@@ -178,38 +180,44 @@ export default function ManageItemsScreen() {
       )}
 
       {/* 등록/수정 모달 */}
-      <Modal visible={modalVisible} animationType="slide">
-        <View style={{ flex: 1, padding: 20 }}>
-          <TextInput
-            placeholder="이름"
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-          />
+      <Modal visible={modalVisible} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <TextInput
+              placeholder="이름"
+              value={name}
+              onChangeText={setName}
+              style={styles.input}
+            />
 
-          <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}>
-            <Text style={styles.toggle}>종류: {type === "drink" ? "음료" : "간식"} (터치 변경)</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}>
+              <Text style={styles.toggle}>종류: {type === "drink" ? "음료" : "간식"} (터치 변경)</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={pickImage} style={styles.imagePick}>
-            <Text>📷 이미지 선택</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={pickImage} style={styles.imagePick}>
+              <Text>📷 이미지 선택</Text>
+            </TouchableOpacity>
 
-          {image && (
-            <Image source={{ uri: image }} style={{ width: 100, height: 100, marginTop: 10 }} />
-          )}
+            {image && (
+              <View style={{ alignItems: "center", marginTop: 10 }}>
+                <Image source={{ uri: image }} style={styles.previewImage} />
+              </View>
+            )}
 
-          <TouchableOpacity onPress={() => setStock(!stock)} style={styles.toggle}>
-            <Text>재고: {stock ? "있음" : "품절"} (터치 변경)</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => setStock(!stock)} style={styles.toggle}>
+              <Text>재고: {stock ? "있음" : "품절"} (터치 변경)</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-            <Text style={{ color: "white" }}>{editId ? "수정하기" : "등록하기"}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+              <Text style={{ color: "white", fontSize: 16 }}>
+                {editId ? "수정하기" : "등록하기"}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={resetForm} style={{ marginTop: 20 }}>
-            <Text style={{ color: "gray" }}>닫기</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={resetForm} style={{ marginTop: 15, alignItems: "center" }}>
+              <Text style={{ color: "gray" }}>닫기</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -217,100 +225,47 @@ export default function ManageItemsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: "#333",
-    textAlign: "center",
-  },
+  header: { fontSize: 24, fontWeight: "bold", marginBottom: 16, color: "#333", textAlign: "center" },
   input: {
-    borderWidth: 1,
-    borderColor: "#bbb",
-    borderRadius: 10,
-    padding: 12,
-    marginVertical: 10,
-    fontSize: 16,
-    backgroundColor: "#fff",
+    borderWidth: 1, borderColor: "#bbb", borderRadius: 10, padding: 12,
+    marginVertical: 10, fontSize: 16, backgroundColor: "#fff",
   },
-  toggle: {
-    marginVertical: 12,
-    fontSize: 16,
-    color: "#555",
-  },
+  toggle: { marginVertical: 12, fontSize: 16, color: "#555" },
   imagePick: {
-    borderWidth: 1,
-    borderColor: "#aaa",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    backgroundColor: "#f7f7f7",
-    marginVertical: 10,
+    borderWidth: 1, borderColor: "#aaa", padding: 12,
+    borderRadius: 8, alignItems: "center", backgroundColor: "#f7f7f7",
+  },
+  previewImage: {
+    width: 120, height: 120, borderRadius: 10, resizeMode: "cover",
   },
   button: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: "#5DBB9D", paddingVertical: 14, borderRadius: 10,
+    alignItems: "center", marginTop: 10, shadowColor: "#000",
+    shadowOpacity: 0.1, shadowRadius: 6, elevation: 3,
   },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 12,
-    marginVertical: 6,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    flexDirection: "row", alignItems: "center", padding: 12,
+    borderWidth: 1, borderColor: "#ddd", borderRadius: 12,
+    marginVertical: 6, backgroundColor: "#fff",
+    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+  cardImageWrapper: {
+    justifyContent: 'center', alignItems: 'center', marginRight: 12,
   },
   cardImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    backgroundColor: "#eee",
-    marginRight: 12,
+    width: 70, height: 70, borderRadius: 8, backgroundColor: "#eee",
   },
-  cardContent: {
-    flex: 1,
-    justifyContent: "center",
+  cardContent: { flex: 1, justifyContent: "center" },
+  cardTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
+  cardStock: { fontSize: 14 },
+  cardButtons: { flexDirection: "row", gap: 8 },
+  editBtn: { padding: 6, backgroundColor: "#e3f2fd", borderRadius: 6 },
+  deleteBtn: { padding: 6, backgroundColor: "#ffebee", borderRadius: 6 },
+  modalOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center",
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  cardStock: {
-    fontSize: 14,
-  },
-  cardButtons: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  editBtn: {
-    padding: 6,
-    backgroundColor: "#e3f2fd",
-    borderRadius: 6,
-  },
-  deleteBtn: {
-    padding: 6,
-    backgroundColor: "#ffebee",
-    borderRadius: 6,
-  },
-  image: {
-    width: 60,
-    height: 60,
-    marginRight: 14,
-    borderRadius: 8,
-    backgroundColor: "#eee",
+  modalCard: {
+    width: 320, backgroundColor: "#fff", borderRadius: 12, padding: 20,
+    shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 10, elevation: 5,
   },
 });

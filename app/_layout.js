@@ -5,16 +5,14 @@ import { StudentInfoProvider } from "../context/StudentInfoContext";
 
 export default function Layout() {
   const router = useRouter();
-  const [dDay, setDDay] = useState("");
+  const [dDayText, setDDayText] = useState("");
 
   useEffect(() => {
     const targetDate = new Date("2025-09-19");
     const today = new Date();
-
     const timeDiff = targetDate.getTime() - today.getTime();
     const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-
-    setDDay(`D-${dayDiff}`);
+    setDDayText(`📅 2025 전국기능경기대회 D-${dayDiff}`);
   }, []);
 
   return (
@@ -22,17 +20,19 @@ export default function Layout() {
       <Stack
         screenOptions={{
           headerShown: true,
-          headerTitle: "",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.push("/main")}>
-              <Text style={{ marginLeft: 16, fontSize: 16, color: "blue" }}>🏠 홈</Text>
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View style={{ marginRight: 16 }}>
-              <Text style={{ fontSize: 16, color: "black" }}>{dDay}</Text>
+          headerTitle: () => (
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ fontSize: 16, fontWeight: "bold", color: "#333" }}>
+                {dDayText}
+              </Text>
             </View>
           ),
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.push("/main")}>
+              <Text style={{ marginLeft: 16, fontSize: 16, color: "#4A90E2" }}>🏠</Text>
+            </TouchableOpacity>
+          ),
+          headerRight: () => <View style={{ marginRight: 16 }} />, // 오른쪽 비워두기
         }}
       />
     </StudentInfoProvider>
