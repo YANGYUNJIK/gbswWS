@@ -7,7 +7,7 @@ import { StudentInfoContext } from "../../context/StudentInfoContext";
 
 const SERVER_URL = "https://gbswws.onrender.com";
 const screenWidth = Dimensions.get("window").width;
-const CARD_GAP = 65;
+const CARD_GAP = 60;
 const CARD_WIDTH = (screenWidth - CARD_GAP * 5) / 4;
 
 export default function DrinkScreen() {

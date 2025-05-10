@@ -21,7 +21,7 @@ export default function MainScreen() {
   const [teacherPassword, setTeacherPassword] = useState("");
   const [studentModalVisible, setStudentModalVisible] = useState(false);
   const [teacherModalVisible, setTeacherModalVisible] = useState(false);
-  const [category, setCategory] = useState(null);
+  const [category, setCategory] = useState("");
   const { saveStudentInfo } = useContext(StudentInfoContext);
 
   const handleStudentConfirm = () => {
@@ -56,7 +56,7 @@ export default function MainScreen() {
         <RNPickerSelect
           onValueChange={(value) => setCategory(value)}
           value={category}
-          placeholder={{ label: "직종을 선택하세요", value: null }}
+          placeholder={{ label: "직종을 선택하세요", value: "" }}
           useNativeAndroidPickerStyle={false}
           items={categories.map((cat) => ({ label: cat, value: cat }))}
           style={pickerSelectStyles}

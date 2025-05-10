@@ -10,16 +10,18 @@ const SERVER_URL = "https://gbswws.onrender.com";
 const socket = io(SERVER_URL);
 
 export default function StudentOrdersScreen() {
-  const { studentName } = useContext(StudentInfoContext);
+  const { studentName, category } = useContext(StudentInfoContext);
   const [orders, setOrders] = useState([]);
 
   const fetchOrders = async () => {
-    if (!studentName) return;
+    if (!studentName || !category) return;
 
     try {
       const res = await fetch(`${SERVER_URL}/orders`);
       const data = await res.json();
-      const filtered = data.filter(order => order.studentName === studentName);
+      const filtered = data.filter(
+        order => order.studentName === studentName && order.userJob === category
+      );
       setOrders(filtered);
     } catch (err) {
       console.error("❌ 주문 불러오기 실패:", err);
@@ -34,7 +36,10 @@ export default function StudentOrdersScreen() {
     });
 
     socket.on("orderUpdated", (updatedOrder) => {
-      if (updatedOrder.studentName === studentName) {
+      if (
+        updatedOrder.studentName === studentName &&
+        updatedOrder.userJob === category
+      ) {
         alert(`📢 '${updatedOrder.menu}' 신청이 '${translateStatus(updatedOrder.status)}' 처리되었습니다.`);
         fetchOrders();
       }
@@ -43,7 +48,7 @@ export default function StudentOrdersScreen() {
     return () => {
       socket.off("orderUpdated");
     };
-  }, [studentName]);
+  }, [studentName, category]);
 
   const translateStatus = (status) => {
     switch (status) {
