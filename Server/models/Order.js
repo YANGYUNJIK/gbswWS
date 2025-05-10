@@ -7,6 +7,7 @@ const orderSchema = new mongoose.Schema(
     userJob: String,
     menu: String,
     quantity: Number,
+    image: String, // ✅ 이미지 URL 저장용 필드 추가
     status: {
       type: String,
       default: "pending",
