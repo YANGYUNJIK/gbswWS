@@ -117,8 +117,8 @@ export default function MainScreen() {
               style={styles.input}
               value={teacherPassword}
               onChangeText={setTeacherPassword}
-              secureTextEntry
-              placeholder="1234"
+              // secureTextEntry
+              // placeholder="1234"
             />
             <TouchableOpacity style={styles.modalButton} onPress={handleTeacherConfirm}>
               <Text style={styles.modalButtonText}>확인</Text>

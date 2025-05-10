@@ -17,9 +17,10 @@ export default function StudentOrdersScreen() {
     if (!studentName) return;
 
     try {
-      const res = await fetch(`${SERVER_URL}/orders?studentName=${studentName}`);
+      const res = await fetch(`${SERVER_URL}/orders`);
       const data = await res.json();
-      setOrders(data);
+      const filtered = data.filter(order => order.studentName === studentName);
+      setOrders(filtered);
     } catch (err) {
       console.error("❌ 주문 불러오기 실패:", err);
     }
