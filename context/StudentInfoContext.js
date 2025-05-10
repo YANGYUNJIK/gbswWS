@@ -1,11 +1,12 @@
-import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createContext, useEffect, useState } from "react";
 
 export const StudentInfoContext = createContext();
 
 export const StudentInfoProvider = ({ children }) => {
   const [studentName, setStudentName] = useState("");
   const [category, setCategory] = useState("");
+  
 
   useEffect(() => {
     const loadData = async () => {

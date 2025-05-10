@@ -1,12 +1,18 @@
+// ✅ Server/models/Order.js
 const mongoose = require("mongoose");
 
-const OrderSchema = new mongoose.Schema({
-  studentName: { type: String, required: true },
-  userJob: { type: String }, // 선택사항
-  menu: { type: String, required: true },
-  quantity: { type: Number, required: true },
-  status: { type: String, default: "대기중" },
-  createdAt: { type: Date, default: Date.now }
-});
+const orderSchema = new mongoose.Schema(
+  {
+    studentName: String,
+    userJob: String,
+    menu: String,
+    quantity: Number,
+    status: {
+      type: String,
+      default: "pending",
+    },
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("Order", OrderSchema);
+module.exports = mongoose.model("Order", orderSchema);

@@ -1,5 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -10,12 +10,15 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { io } from "socket.io-client";
 
 const SERVER_URL = Platform.OS === "web"
   ? "http://localhost:3000"
   : "https://gbswws.onrender.com";
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dfwaukxfs/upload";
 const UPLOAD_PRESET = "unsigned";
+
+const socket = io(SERVER_URL);
 
 export default function ManageItemsScreen() {
   const [items, setItems] = useState([]);

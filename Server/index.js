@@ -1,79 +1,69 @@
-require("dotenv").config(); // 반드시 index.js 맨 위에 있어야 함
-
+// ✅ /Server/index.js
+require("dotenv").config();
 const express = require("express");
-const http = require("http"); // ← socket.io와 함께 필요
+const http = require("http");
 const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
-const server = http.createServer(app); // ← app을 http 서버로 감싸기
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*", methods: ["GET", "POST", "PATCH", "DELETE"] },
+});
 
+const Order = require("./models/Order");
+const Item = require("./models/Item");
 const itemsRoutes = require("./routes/items");
 const ordersRoutes = require("./routes/orders");
 
-
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-  },
-});
-
-// 라우터보다 미들웨어 먼저
 app.use(cors());
 app.use(express.json());
+app.use("/items", itemsRoutes);
+app.use("/orders", ordersRoutes);
 
-
-// 라우터 등록
-app.use("/items", itemsRoutes);     // ✅ 이렇게 되어 있어야 함
-app.use("/orders", ordersRoutes);   // ✅ 이렇게 되어 있어야 함
-
-
-// MongoDB 연결
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB 연결됨"))
   .catch((err) => console.log("❌ MongoDB 연결 실패", err));
 
-// 클라이언트 연결 확인
 io.on("connection", (socket) => {
-  console.log("🟢 클라이언트 접속됨:", socket.id);
+  //console.log("🟢 클라이언트 접속됨:", socket.id);
 
   socket.on("disconnect", () => {
-    console.log("🔴 클라이언트 연결 해제:", socket.id);
+  //  console.log("🔴 클라이언트 연결 해제:", socket.id);
   });
 });
 
-// POST /orders (신청할 때 알림 보내기)
+// ✅ 주문 저장 + 소켓 알림
 app.post("/orders", async (req, res) => {
-  const orderData = req.body;
-
-  // 여기서 DB에 저장 (예: new Order(orderData).save() 생략 가능)
-  // 저장된 데이터 대신 요청 본문 사용
-  io.emit("newOrder", orderData); // 💡 실시간 전송
-  res.status(201).json({ message: "신청 완료", order: orderData });
+  try {
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+    io.emit("newOrder", newOrder);
+    res.status(201).json({ message: "신청 완료", order: newOrder });
+  } catch (err) {
+    console.error("❌ 주문 저장 실패", err);
+    res.status(500).json({ message: "주문 저장 실패" });
+  }
 });
 
-server.listen(3000, () => {
-  console.log("🚀 서버 실행 중 (포트 3000)");
-});
-
-// POST /orders (신청할 때 알림 보내기)
+// ✅ 상태 변경 + 소켓 알림
 app.patch("/orders/:id", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   try {
     const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
-
     if (!order) return res.status(404).json({ message: "주문 없음" });
-
-    // 🔔 실시간으로 해당 주문이 변경되었음을 알림
-    io.emit("orderUpdated", order); // 모든 연결된 클라이언트에게 전송
-
+    io.emit("orderUpdated", order);
     res.json(order);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "수정 실패" });
+    console.error("❌ 상태 변경 실패", err);
+    res.status(500).json({ message: "상태 변경 실패" });
   }
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 서버 실행 중 (포트 ${PORT})`);
 });
