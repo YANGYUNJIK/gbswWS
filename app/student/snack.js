@@ -7,7 +7,7 @@ import { StudentInfoContext } from "../../context/StudentInfoContext";
 const SERVER_URL = "https://gbswws.onrender.com";
 
 export default function DrinkScreen() {
-  const { studentName, category } = useContext(StudentInfoContext); // ✅ category 불러오기
+  const { studentName, category } = useContext(StudentInfoContext); // category는 직종
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -20,7 +20,7 @@ export default function DrinkScreen() {
       const drinks = data.filter((item) => item.type === "snack" && item.stock);
       setItems(drinks);
     } catch (err) {
-      console.error("❌ 음료 목록 불러오기 실패", err);
+      console.error("❌ 간식 목록 불러오기 실패", err);
     }
   };
 
@@ -36,18 +36,16 @@ export default function DrinkScreen() {
 
   const handleSubmit = async () => {
     if (!studentName || !category) {
-      alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
+      alert("학생 이름 또는 직종이 설정되지 않았습니다.");
       return;
     }
 
     const payload = {
       studentName,
-      userJob: "학생",
-      category, // ✅ 카테고리 추가
+      userJob: category, // "학생"이 아닌 실제 선택한 직종
       menu: selectedItem.name,
-      menuType: selectedItem.type, // ✅ 음료 or 간식
       quantity,
-      createdAt: new Date(),
+      image: selectedItem.image, // ✅ 이미지 필드 추가
     };
 
     try {

@@ -19,18 +19,28 @@ router.post("/", async (req, res) => {
   }
 });
 
-//
-
 // 주문 목록 가져오기
-router.get("/", async (req, res) => {
+// ✅ 인기 메뉴 Top 3 API
+router.get("/popular", async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
+    const orders = await Order.aggregate([
+      {
+        $group: {
+          _id: "$menu",
+          totalQuantity: { $sum: "$quantity" },
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 3 },
+    ]);
+
     res.json(orders);
   } catch (error) {
-    console.error("❌ 주문 조회 실패:", error);
-    res.status(500).json({ error: "주문 조회 실패" });
+    console.error("❌ 인기 메뉴 집계 실패:", error);
+    res.status(500).json({ error: "인기 메뉴 집계 실패" });
   }
 });
+
 
 // 주문 상태 변경
 router.patch("/:id", async (req, res) => {
