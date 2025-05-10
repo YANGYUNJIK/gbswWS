@@ -144,9 +144,7 @@ export default function ManageItemsScreen() {
         <Text style={styles.cardTitle}>
           {item.name} ({item.type === "drink" ? "음료" : "간식"})
         </Text>
-        <Text style={[styles.cardStock, { color: item.stock ? "green" : "red" }]}>
-          재고: {item.stock ? "있음" : "품절"}
-        </Text>
+        <Text style={[styles.cardStock, { color: item.stock ? "green" : "red" }]}>재고: {item.stock ? "있음" : "품절"}</Text>
       </View>
       <View style={styles.cardButtons}>
         <TouchableOpacity onPress={() => handleEdit(item)} style={styles.editBtn}>
@@ -177,10 +175,10 @@ export default function ManageItemsScreen() {
             data={items}
             keyExtractor={(item) => item._id}
             renderItem={renderItem}
+            contentContainerStyle={{ paddingBottom: 100 }}
           />
         )}
 
-        {/* 등록/수정 모달 */}
         <Modal visible={modalVisible} animationType="fade" transparent>
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
@@ -191,7 +189,7 @@ export default function ManageItemsScreen() {
                 style={styles.input}
               />
 
-              <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}>
+              <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}> 
                 <Text style={styles.toggle}>종류: {type === "drink" ? "음료" : "간식"} (터치 변경)</Text>
               </TouchableOpacity>
 
@@ -210,9 +208,7 @@ export default function ManageItemsScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-                <Text style={{ color: "white", fontSize: 16 }}>
-                  {editId ? "수정하기" : "등록하기"}
-                </Text>
+                <Text style={{ color: "white", fontSize: 16 }}>{editId ? "수정하기" : "등록하기"}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={resetForm} style={{ marginTop: 15, alignItems: "center" }}>
@@ -228,6 +224,7 @@ export default function ManageItemsScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: "#f0f4f8",
     padding: 10,
   },

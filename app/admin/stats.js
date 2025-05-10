@@ -38,7 +38,7 @@ export default function StatsScreen() {
   };
 
   const chartBlock = (title, data, type = "bar") => (
-    <View style={{ marginBottom: 40 }}>
+    <View style={styles.chartBlock}>
       <Text style={styles.chartTitle}>{title}</Text>
       <ResponsiveContainer width="100%" height={300}>
         {type === "bar" ? (
@@ -98,7 +98,35 @@ export default function StatsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-  chartTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  container: {
+    padding: 20,
+    backgroundColor: "#f0f4f8",
+    alignItems: "center",
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 30,
+    color: "#333",
+    textAlign: "center",
+  },
+  chartBlock: {
+    width: "100%",
+    maxWidth: 800,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+    color: "#444",
+  },
 });

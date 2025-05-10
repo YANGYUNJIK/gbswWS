@@ -1,10 +1,11 @@
-// ✅ /app/admin/orders.js
+// ✅ /app/admin/orders.js (중앙 정렬 개선)
 import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -13,6 +14,8 @@ const SERVER_URL = "https://gbswws.onrender.com";
 
 export default function AdminOrdersScreen() {
   const [orders, setOrders] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState("전체");
+  const [filterValue, setFilterValue] = useState("");
 
   const fetchOrders = async () => {
     try {
@@ -29,133 +32,154 @@ export default function AdminOrdersScreen() {
   }, []);
 
   const updateOrderStatus = async (id, newStatus) => {
-    if (!id) {
-      console.error("❌ 주문 ID 없음", id);
-      return;
-    }
-
+    if (!id) return;
     try {
       const res = await fetch(`${SERVER_URL}/orders/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      const result = await res.json();
-      console.log("✅ 상태 업데이트 완료", result);
-      fetchOrders(); // 상태 업데이트 후 새로고침
+      await res.json();
+      fetchOrders();
     } catch (error) {
       console.error("상태 업데이트 실패", error);
     }
   };
 
-  const getBadgeStyle = (status) => {
-    switch (status) {
-      case "accepted":
-        return { backgroundColor: "#4CAF50" }; // 초록
-      case "rejected":
-        return { backgroundColor: "#F44336" }; // 빨강
-      default:
-        return { backgroundColor: "#9E9E9E" }; // 회색
-    }
-  };
-
   const getStatusColor = (status) => {
     switch (status) {
-      case "accepted":
-        return { backgroundColor: "#5DBB9D" };
-      case "rejected":
-        return { backgroundColor: "#F44336" };
-      default:
-        return { backgroundColor: "#9E9E9E" };
+      case "accepted": return { backgroundColor: "#5DBB9D" };
+      case "rejected": return { backgroundColor: "#F44336" };
+      default: return { backgroundColor: "#9E9E9E" };
     }
   };
 
+  const filteredOrders = orders.filter((order) => {
+    if (selectedFilter === "전체") return true;
+    const field = selectedFilter === "직종" ? "userJob" : "studentName";
+    return order[field]?.toLowerCase().includes(filterValue.toLowerCase());
+  });
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-
-      <View style={styles.infoSection}>
-        <Text style={styles.name}>{item.menu}</Text>
-        <Text style={styles.detail}>{item.studentName} / {item.userJob}</Text>
-        <Text style={styles.detail}>{item.quantity}개 · {new Date(item.createdAt).toLocaleTimeString()}</Text>
-        <View style={styles.statusRow}>
-          <Text style={[styles.statusBadge, getStatusColor(item.status)]}>
-            {item.status === "accepted"
-              ? "수락"
-              : item.status === "rejected"
-                ? "거절"
-                : "대기"}
-          </Text>
-
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: "#5DBB9D" }]}
-              onPress={() => updateOrderStatus(item._id, "accepted")}
-            >
-              <Text style={styles.buttonText}>수락</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: "#F44336" }]}
-              onPress={() => updateOrderStatus(item._id, "rejected")}
-            >
-              <Text style={styles.buttonText}>거절</Text>
-            </TouchableOpacity>
+    <View style={styles.cardWrapper}>
+      <View style={styles.card}>
+        <Image source={{ uri: item.image }} style={styles.image} />
+        <View style={styles.infoSection}>
+          <Text style={styles.name}>{item.menu}</Text>
+          <Text style={styles.detail}>{item.studentName} / {item.userJob}</Text>
+          <Text style={styles.detail}>{item.quantity}개 · {new Date(item.createdAt).toLocaleTimeString()}</Text>
+          <View style={styles.statusRow}>
+            <Text style={[styles.statusBadge, getStatusColor(item.status)]}>
+              {item.status === "accepted" ? "수락" : item.status === "rejected" ? "거절" : "대기"}
+            </Text>
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: "#5DBB9D" }]}
+                onPress={() => updateOrderStatus(item._id, "accepted")}
+              >
+                <Text style={styles.buttonText}>수락</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: "#F44336" }]}
+                onPress={() => updateOrderStatus(item._id, "rejected")}
+              >
+                <Text style={styles.buttonText}>거절</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
     </View>
   );
 
-
   return (
-    <FlatList
-      data={orders}
-      renderItem={renderItem}
-      keyExtractor={(item) => item._id}
-      contentContainerStyle={styles.container}
-    />
+    <View style={styles.container}>
+      <View style={styles.buttonFilterContainer}>
+        {['전체', '직종', '이름'].map((label) => (
+          <TouchableOpacity
+            key={label}
+            style={[styles.filterButton, selectedFilter === label && styles.filterButtonActive]}
+            onPress={() => {
+              setSelectedFilter(label);
+              setFilterValue("");
+            }}
+          >
+            <Text style={selectedFilter === label ? styles.filterTextActive : styles.filterText}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {selectedFilter !== "전체" && (
+        <View style={styles.centeredRow}>
+          <TextInput
+            style={styles.filterInput}
+            placeholder="검색어 입력"
+            value={filterValue}
+            onChangeText={setFilterValue}
+          />
+        </View>
+      )}
+      <FlatList
+        data={filteredOrders}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.centeredList}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#f0f4f8",
+    flex: 1,
     padding: 16,
   },
-  text: {
-    fontSize: 16,
-    marginBottom: 4,
+  centeredRow: {
+    alignItems: "center",
   },
-  buttonContainer: {
+  centeredList: {
+    alignItems: "center",
+    paddingBottom: 60,
+  },
+  cardWrapper: {
+    width: "100%",
+    alignItems: "center",
+  },
+  buttonFilterContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 8,
+    justifyContent: "center",
+    marginBottom: 10,
+    gap: 10,
   },
-  acceptButton: {
-    backgroundColor: "green",
-    padding: 8,
-    borderRadius: 4,
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#eee",
+    borderRadius: 20,
   },
-  rejectButton: {
-    backgroundColor: "red",
-    padding: 8,
-    borderRadius: 4,
+  filterButtonActive: {
+    backgroundColor: "#5DBB9D",
   },
-  badgeWrapper: {
-    marginTop: 6,
+  filterText: {
+    color: "#333",
+    fontWeight: "bold",
   },
-  badge: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
+  filterTextActive: {
     color: "white",
     fontWeight: "bold",
-    textAlign: "center",
-    alignSelf: "flex-start",
-    fontSize: 13,
+  },
+  filterInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    width: "50%",
+    height: 50,
+    backgroundColor: "#fff",
+    marginBottom: 12,
   },
   card: {
+    width: 742,
     flexDirection: "row",
     backgroundColor: "#fff",
     padding: 10,
@@ -211,5 +235,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
   },
-
 });
