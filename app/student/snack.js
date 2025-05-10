@@ -48,6 +48,7 @@ export default function DrinkScreen() {
       menuType: selectedItem.type, // ✅ 음료 or 간식
       quantity,
       createdAt: new Date(),
+      image: selectedItem.image, // ✅ 반드시 포함되어야 함
     };
 
     try {

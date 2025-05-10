@@ -47,31 +47,43 @@ export default function AdminOrdersScreen() {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.text}>직종: {item.userJob}</Text>
-      <Text style={styles.text}>이름: {item.studentName}</Text>
-      <Text style={styles.text}>메뉴: {item.menu}</Text>
-      <Text style={styles.text}>개수: {item.quantity}</Text>
-      <Text style={styles.text}>신청시간: {new Date(item.createdAt).toLocaleString()}</Text>
-      <Text style={styles.text}>상태: {item.status}</Text>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.acceptButton}
-          onPress={() => updateOrderStatus(item._id, "accepted")}
-        >
-          <Text style={styles.buttonText}>수락</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.rejectButton}
-          onPress={() => updateOrderStatus(item._id, "rejected")}
-        >
-          <Text style={styles.buttonText}>거절</Text>
-        </TouchableOpacity>
+  const renderItem = ({ item }) => (
+  
+  console.log("🖼️ 이미지 URL:", item.image),
+
+  <View style={styles.card}>
+    <View style={{ flexDirection: "row", alignItems: "center" }}>
+      {item.image ? (
+        <Image source={{ uri: item.image }} style={styles.image} />
+      ) : (
+        <View style={[styles.image, { backgroundColor: "#eee" }]} />
+      )}
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={styles.text}>직종: {item.userJob}</Text>
+        <Text style={styles.text}>이름: {item.studentName}</Text>
+        <Text style={styles.text}>메뉴: {item.menu}</Text>
+        <Text style={styles.text}>개수: {item.quantity}</Text>
+        <Text style={styles.text}>신청시간: {new Date(item.createdAt).toLocaleString()}</Text>
+        <Text style={styles.text}>상태: {item.status}</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.acceptButton}
+            onPress={() => updateOrderStatus(item._id, "accepted")}
+          >
+            <Text style={styles.buttonText}>수락</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.rejectButton}
+            onPress={() => updateOrderStatus(item._id, "rejected")}
+          >
+            <Text style={styles.buttonText}>거절</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
-  );
+  </View>
+);
 
   return (
     <FlatList
@@ -115,5 +127,11 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  image: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    resizeMode: "cover",
   },
 });

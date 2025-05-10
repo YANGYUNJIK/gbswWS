@@ -42,11 +42,14 @@ export default function DrinkScreen() {
 
   const payload = {
     studentName,
-    userJob: "학생",
+    userJob: category,
     menu: selectedItem.name,
     quantity,
     // ✅ 서버에서 자동으로 처리하는 createdAt, status는 보내지 않아도 됨
+    image: selectedItem.image, // ✅ 반드시 포함되어야 함
   };
+
+  //console.log("✅ 선택된 이미지:", selectedItem.image);
 
   try {
     const res = await fetch(`${SERVER_URL}/orders`, {

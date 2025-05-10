@@ -47,4 +47,24 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+router.get("/popular", async (req, res) => {
+  try {
+    const orders = await Order.aggregate([
+      {
+        $group: {
+          _id: "$menu",
+          totalQuantity: { $sum: "$quantity" },
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 3 },
+    ]);
+
+    res.json(orders);
+  } catch (error) {
+    console.error("❌ 인기 메뉴 집계 실패:", error);
+    res.status(500).json({ error: "인기 메뉴 집계 실패" });
+  }
+});
+
 module.exports = router;

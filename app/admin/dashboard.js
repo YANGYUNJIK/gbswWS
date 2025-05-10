@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from "react";
-import {
-  View, Text, TouchableOpacity, StyleSheet, Platform
-} from "react-native";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  Image,
+  StyleSheet,
+  Text, TouchableOpacity,
+  View
+} from "react-native";
 
 const SERVER_URL = "https://gbswws.onrender.com";
 
@@ -46,11 +49,29 @@ export default function AdminDashboard() {
       <Text style={styles.stat}>품절 항목 수: {outOfStock}</Text>
 
       <Text style={[styles.stat, { marginTop: 15 }]}>🔥 인기 메뉴 Top 3:</Text>
-      {sortedMenus.map(([name, count], i) => (
+      {/* {sortedMenus.map(([name, count], i) => (
         <Text key={i} style={styles.stat}>
           {i + 1}. {name} ({count}회)
         </Text>
-      ))}
+      ))} */}
+
+            <View style={styles.popularRow}>
+        {sortedMenus.map(([name, count], i) => {
+          const item = items.find((i) => i.name === name);
+          return (
+            <View key={i} style={styles.popularCard}>
+              {item?.image ? (
+                <Image source={{ uri: item.image }} style={styles.popularImage} />
+              ) : (
+                <View style={[styles.popularImage, { backgroundColor: "#ddd" }]} />
+              )}
+              <Text style={styles.popularText}>{name}</Text>
+              <Text style={styles.popularSub}>{count}회</Text>
+            </View>
+          );
+        })}
+      </View>
+
 
       <View style={styles.buttons}>
         <TouchableOpacity style={styles.button} onPress={() => router.push("/admin/manage")}>
@@ -76,5 +97,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#4CAF50", padding: 12, borderRadius: 8,
     marginBottom: 10, alignItems: "center"
   },
-  buttonText: { color: "white", fontWeight: "bold" }
+  buttonText: { color: "white", fontWeight: "bold" },  popularRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    gap: 10,
+  },
+  popularCard: {
+    width: "30%",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    padding: 8,
+    alignItems: "center",
+  },
+  popularImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  popularText: {
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  popularSub: {
+    fontSize: 12,
+    color: "#555",
+  },
+
 });
