@@ -49,62 +49,64 @@ export default function AdminOrdersScreen() {
   };
 
   const getBadgeStyle = (status) => {
-  switch (status) {
-    case "accepted":
-      return { backgroundColor: "#4CAF50" }; // 초록
-    case "rejected":
-      return { backgroundColor: "#F44336" }; // 빨강
-    default:
-      return { backgroundColor: "#9E9E9E" }; // 회색
-  }
-};
+    switch (status) {
+      case "accepted":
+        return { backgroundColor: "#4CAF50" }; // 초록
+      case "rejected":
+        return { backgroundColor: "#F44336" }; // 빨강
+      default:
+        return { backgroundColor: "#9E9E9E" }; // 회색
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "accepted":
+        return { backgroundColor: "#5DBB9D" };
+      case "rejected":
+        return { backgroundColor: "#F44336" };
+      default:
+        return { backgroundColor: "#9E9E9E" };
+    }
+  };
 
 
   const renderItem = ({ item }) => (
-  
-  console.log("🖼️ 이미지 URL:", item.image),
+    <View style={styles.card}>
+      <Image source={{ uri: item.image }} style={styles.image} />
 
-  <View style={styles.card}>
-    <View style={{ flexDirection: "row", alignItems: "center" }}>
-      {item.image ? (
-        <Image source={{ uri: item.image }} style={styles.image} />
-      ) : (
-        <View style={[styles.image, { backgroundColor: "#eee" }]} />
-      )}
-      <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text style={styles.text}>직종: {item.userJob}</Text>
-        <Text style={styles.text}>이름: {item.studentName}</Text>
-        <Text style={styles.text}>메뉴: {item.menu}</Text>
-        <Text style={styles.text}>개수: {item.quantity}</Text>
-        <Text style={styles.text}>신청시간: {new Date(item.createdAt).toLocaleString()}</Text>
-        <View style={styles.badgeWrapper}>
-  <Text style={[styles.badge, getBadgeStyle(item.status)]}>
-    {item.status === "pending"
-      ? "대기중"
-      : item.status === "accepted"
-      ? "수락됨"
-      : "거절됨"}
-  </Text>
-</View>
+      <View style={styles.infoSection}>
+        <Text style={styles.name}>{item.menu}</Text>
+        <Text style={styles.detail}>{item.studentName} / {item.userJob}</Text>
+        <Text style={styles.detail}>{item.quantity}개 · {new Date(item.createdAt).toLocaleTimeString()}</Text>
+        <View style={styles.statusRow}>
+          <Text style={[styles.statusBadge, getStatusColor(item.status)]}>
+            {item.status === "accepted"
+              ? "수락"
+              : item.status === "rejected"
+                ? "거절"
+                : "대기"}
+          </Text>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.acceptButton}
-            onPress={() => updateOrderStatus(item._id, "accepted")}
-          >
-            <Text style={styles.buttonText}>수락</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.rejectButton}
-            onPress={() => updateOrderStatus(item._id, "rejected")}
-          >
-            <Text style={styles.buttonText}>거절</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: "#5DBB9D" }]}
+              onPress={() => updateOrderStatus(item._id, "accepted")}
+            >
+              <Text style={styles.buttonText}>수락</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: "#F44336" }]}
+              onPress={() => updateOrderStatus(item._id, "rejected")}
+            >
+              <Text style={styles.buttonText}>거절</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
-  </View>
-);
+  );
+
 
   return (
     <FlatList
@@ -119,12 +121,6 @@ export default function AdminOrdersScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
   },
   text: {
     fontSize: 16,
@@ -145,27 +141,74 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 4,
   },
-  buttonText: {
-    color: "#fff",
+  badgeWrapper: {
+    marginTop: 6,
+  },
+  badge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    color: "white",
     fontWeight: "bold",
+    textAlign: "center",
+    alignSelf: "flex-start",
+    fontSize: 13,
+  },
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
+    alignItems: "center",
   },
   image: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     borderRadius: 8,
-    resizeMode: "cover",
+    marginRight: 12,
   },
-  badgeWrapper: {
-  marginTop: 6,
-},
-badge: {
-  paddingVertical: 4,
-  paddingHorizontal: 8,
-  borderRadius: 12,
-  color: "white",
-  fontWeight: "bold",
-  textAlign: "center",
-  alignSelf: "flex-start",
-  fontSize: 13,
-},
+  infoSection: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 2,
+  },
+  detail: {
+    fontSize: 13,
+    color: "#555",
+  },
+  statusRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    color: "white",
+    fontWeight: "bold",
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  actionButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+
 });

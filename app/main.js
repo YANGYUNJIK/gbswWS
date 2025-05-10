@@ -1,63 +1,130 @@
-import React, { useState, useContext } from "react";
-import {
-  View, Text, Button, Modal, TextInput, TouchableOpacity, StyleSheet
-} from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
-import { StudentInfoContext } from "../context/StudentInfoContext";
+import { useState } from "react";
+import {
+  Alert,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
+import RNPickerSelect from "react-native-picker-select";
+
+const categories = ["게임개발", "사이버보안", "모바일앱개발", "정보기술", "클라우드컴퓨팅"];
 
 export default function MainScreen() {
   const router = useRouter();
-  const { saveStudentInfo } = useContext(StudentInfoContext);
+  const [category, setCategory] = useState(null);
+  const [studentModalVisible, setStudentModalVisible] = useState(false);
+  const [teacherModalVisible, setTeacherModalVisible] = useState(false);
+  const [studentName, setStudentName] = useState("");
+  const [teacherPassword, setTeacherPassword] = useState("");
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("게임개발");
+  const handleStudentConfirm = () => {
+    if (!studentName.trim()) return Alert.alert("이름을 입력하세요");
+    setStudentModalVisible(false);
+    setTimeout(() => {
+      router.push({ pathname: "/student", params: { name: studentName, category } });
+    }, 100);
+  };
 
-  const handleSubmit = () => {
-    if (!name.trim()) return alert("이름을 입력해주세요");
-    saveStudentInfo(name.trim(), category);
-    setModalVisible(false);
-    router.push("/student");
+  const handleTeacherConfirm = () => {
+    if (teacherPassword === "1234") {
+      setTeacherModalVisible(false);
+      setTimeout(() => {
+        router.push("/teacher");
+      }, 100);
+    } else {
+      Alert.alert("비밀번호가 올바르지 않습니다");
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Main Page</Text>
+      <Image
+        source={category ? require("../assets/world2.png") : require("../assets/world1.png")}
+        style={styles.image}
+      />
 
-      <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
-        <Text style={styles.buttonText}>학생 페이지</Text>
-      </TouchableOpacity>
+      <View style={styles.dropdownWrapper}>
+        <RNPickerSelect
+          onValueChange={(value) => setCategory(value)}
+          value={category}
+          placeholder={{ label: "카테고리 선택", value: null }}
+          useNativeAndroidPickerStyle={false}
+          items={categories.map((cat) => ({ label: cat, value: cat }))}
+          style={pickerSelectStyles}
+        />
+      </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push("/teacher")}>
-        <Text style={styles.buttonText}>선생님 페이지</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#5DBB9D" }]}
+          onPress={() => {
+            if (!category) {
+              Alert.alert("직종을 먼저 선택해주세요");
+              return;
+            }
+            setStudentModalVisible(true);
+          }}
+        >
+          <Text style={styles.buttonText}>학생</Text>
+        </TouchableOpacity>
 
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalWrap}>
-          <View style={styles.modalContent}>
-            <Text>종목 선택:</Text>
-            <Picker
-              selectedValue={category}
-              onValueChange={(itemValue) => setCategory(itemValue)}
-            >
-              <Picker.Item label="게임개발" value="게임개발" />
-              <Picker.Item label="모바일앱개발" value="모바일앱개발" />
-              <Picker.Item label="사이버보안" value="사이버보안" />
-              <Picker.Item label="정보기술" value="정보기술" />
-              <Picker.Item label="클라우드컴퓨팅" value="클라우드컴퓨팅" />
-            </Picker>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#4a90e2" }]}
+          onPress={() => {
+            if (!category) {
+              Alert.alert("직종을 먼저 선택해주세요");
+              return;
+            }
+            setTeacherModalVisible(true);
+          }}
+        >
+          <Text style={styles.buttonText}>선생님</Text>
+        </TouchableOpacity>
+      </View>
 
-            <Text>이름 입력:</Text>
+      {/* 학생 모달 */}
+      <Modal visible={studentModalVisible} transparent animationType="fade">
+        <View style={styles.modalWrapper}>
+          <View style={styles.modalBox}>
+            <Text>이름을 입력하세요:</Text>
             <TextInput
               style={styles.input}
-              placeholder="홍길동"
-              value={name}
-              onChangeText={setName}
+              value={studentName}
+              onChangeText={setStudentName}
+              placeholder="예: 홍길동"
             />
-
-            <TouchableOpacity style={styles.modalButton} onPress={handleSubmit}>
+            <TouchableOpacity style={styles.modalButton} onPress={handleStudentConfirm}>
               <Text style={styles.modalButtonText}>확인</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setStudentModalVisible(false)}>
+              <Text style={{ color: "gray", marginTop: 10 }}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 선생님 모달 */}
+      <Modal visible={teacherModalVisible} transparent animationType="fade">
+        <View style={styles.modalWrapper}>
+          <View style={styles.modalBox}>
+            <Text>비밀번호를 입력하세요:</Text>
+            <TextInput
+              style={styles.input}
+              value={teacherPassword}
+              onChangeText={setTeacherPassword}
+              secureTextEntry
+              placeholder="1234"
+            />
+            <TouchableOpacity style={styles.modalButton} onPress={handleTeacherConfirm}>
+              <Text style={styles.modalButtonText}>확인</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setTeacherModalVisible(false)}>
+              <Text style={{ color: "gray", marginTop: 10 }}>닫기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -67,25 +134,58 @@ export default function MainScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 24, marginBottom: 20 },
+  container: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20, backgroundColor: "#fff" },
+  image: { width: 220, height: 180, resizeMode: "contain", marginBottom: 30 },
+  label: { fontSize: 16, marginBottom: 8 },
+  dropdownWrapper: { marginBottom: 30 },
+  buttonRow: { flexDirection: "row", marginTop: 20, gap: 20 },
   button: {
-    backgroundColor: "#4CAF50", padding: 15, borderRadius: 8, marginVertical: 10
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
-  buttonText: { color: "white", fontWeight: "bold" },
-  modalWrap: {
-    flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)"
+  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  modalWrapper: {
+    flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.4)"
   },
-  modalContent: {
-    backgroundColor: "white", padding: 20, borderRadius: 10, width: "80%"
+  modalBox: {
+    width: 300, backgroundColor: "white", padding: 20, borderRadius: 10, alignItems: "center"
   },
   input: {
-    borderWidth: 1, borderColor: "#ccc", padding: 10, marginVertical: 10, borderRadius: 5
+    borderWidth: 1, borderColor: "#ccc", width: "100%", marginTop: 10, padding: 10, borderRadius: 6
   },
   modalButton: {
-    backgroundColor: "#2196F3", padding: 10, marginTop: 10, borderRadius: 5, alignItems: "center"
+    backgroundColor: "#5DBB9D",
+    marginTop: 15,
+    padding: 10,
+    borderRadius: 6,
+    width: "100%",
+    alignItems: "center"
   },
-  modalButtonText: {
-    color: "white", fontWeight: "bold"
-  }
+  modalButtonText: { color: "white", fontWeight: "bold" },
 });
+
+const pickerSelectStyles = {
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    color: 'black',
+    width: 250,
+    textAlign: 'center',
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    color: 'black',
+    width: 250,
+    textAlign: 'center',
+  },
+};
