@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   Alert,
   Image,
@@ -11,22 +11,26 @@ import {
   View
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
+import { StudentInfoContext } from "../context/StudentInfoContext";
 
 const categories = ["게임개발", "사이버보안", "모바일앱개발", "정보기술", "클라우드컴퓨팅"];
 
 export default function MainScreen() {
   const router = useRouter();
-  const [category, setCategory] = useState(null);
+  const [localName, setLocalName] = useState("");
+  const [teacherPassword, setTeacherPassword] = useState("");
   const [studentModalVisible, setStudentModalVisible] = useState(false);
   const [teacherModalVisible, setTeacherModalVisible] = useState(false);
-  const [studentName, setStudentName] = useState("");
-  const [teacherPassword, setTeacherPassword] = useState("");
+  const [category, setCategory] = useState(null);
+  const { saveStudentInfo } = useContext(StudentInfoContext);
 
   const handleStudentConfirm = () => {
-    if (!studentName.trim()) return Alert.alert("이름을 입력하세요");
+    if (!localName.trim()) return Alert.alert("이름을 입력하세요");
+    if (!category) return Alert.alert("직종을 먼저 선택해주세요");
+    saveStudentInfo(localName, category);
     setStudentModalVisible(false);
     setTimeout(() => {
-      router.push({ pathname: "/student", params: { name: studentName, category } });
+      router.push("/student");
     }, 100);
   };
 
@@ -63,10 +67,7 @@ export default function MainScreen() {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "#5DBB9D" }]}
           onPress={() => {
-            if (!category) {
-              Alert.alert("직종을 먼저 선택해주세요");
-              return;
-            }
+            if (!category) return Alert.alert("직종을 먼저 선택해주세요");
             setStudentModalVisible(true);
           }}
         >
@@ -76,10 +77,7 @@ export default function MainScreen() {
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "#4a90e2" }]}
           onPress={() => {
-            if (!category) {
-              Alert.alert("직종을 먼저 선택해주세요");
-              return;
-            }
+            if (!category) return Alert.alert("직종을 먼저 선택해주세요");
             setTeacherModalVisible(true);
           }}
         >
@@ -94,8 +92,8 @@ export default function MainScreen() {
             <Text>이름을 입력하세요:</Text>
             <TextInput
               style={styles.input}
-              value={studentName}
-              onChangeText={setStudentName}
+              value={localName}
+              onChangeText={setLocalName}
               placeholder="예: 홍길동"
             />
             <TouchableOpacity style={styles.modalButton} onPress={handleStudentConfirm}>
@@ -117,8 +115,8 @@ export default function MainScreen() {
               style={styles.input}
               value={teacherPassword}
               onChangeText={setTeacherPassword}
-              // secureTextEntry
-              // placeholder="1234"
+              secureTextEntry
+              placeholder="1234"
             />
             <TouchableOpacity style={styles.modalButton} onPress={handleTeacherConfirm}>
               <Text style={styles.modalButtonText}>확인</Text>
@@ -154,8 +152,8 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   dropdownWrapper: {
-    marginBottom: 20,
-    width: "15%",
+    marginBottom: 10,
+    width: "20%",
   },
   buttonRow: {
     flexDirection: "row",
