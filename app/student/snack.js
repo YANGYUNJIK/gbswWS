@@ -20,7 +20,7 @@ export default function DrinkScreen() {
       const drinks = data.filter((item) => item.type === "snack" && item.stock);
       setItems(drinks);
     } catch (err) {
-      console.error("❌ 음료 목록 불러오기 실패", err);
+      console.error("❌ 간식 목록 불러오기 실패", err);
     }
   };
 
@@ -35,35 +35,39 @@ export default function DrinkScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!studentName || !category) {
-      alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
-      return;
-    }
+  if (!studentName || !category) {
+    alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
+    return;
+  }
 
-    const payload = {
-      studentName,
-      userJob: "학생",
-      category, // ✅ 카테고리 추가
-      menu: selectedItem.name,
-      menuType: selectedItem.type, // ✅ 음료 or 간식
-      quantity,
-      createdAt: new Date(),
-      image: selectedItem.image, // ✅ 반드시 포함되어야 함
-    };
-
-    try {
-      await fetch(`${SERVER_URL}/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      alert("✅ 신청 완료!");
-      setModalVisible(false);
-    } catch (err) {
-      console.error("❌ 신청 실패", err);
-    }
+  const payload = {
+    studentName,
+    userJob: category,
+    menu: selectedItem.name,
+    quantity,
+    // ✅ 서버에서 자동으로 처리하는 createdAt, status는 보내지 않아도 됨
+    image: selectedItem.image, // ✅ 반드시 포함되어야 함
   };
+
+  //console.log("✅ 선택된 이미지:", selectedItem.image);
+
+  try {
+    const res = await fetch(`${SERVER_URL}/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log("✅ 신청 저장 결과:", data);
+
+    alert("✅ 신청 완료!");
+    setModalVisible(false);
+  } catch (err) {
+    console.error("❌ 신청 실패", err);
+  }
+};
+
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleSelect(item)} style={styles.card}>
