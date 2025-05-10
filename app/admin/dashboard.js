@@ -2,9 +2,11 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Image,
+  ScrollView,
   StyleSheet,
-  Text, TouchableOpacity,
-  View
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const SERVER_URL = "https://gbswws.onrender.com";
@@ -29,8 +31,24 @@ export default function AdminDashboard() {
     setItems(itemsData);
   };
 
+  const getTodayOrders = () => {
+    const today = new Date();
+    return orders.filter((order) => {
+      const created = new Date(order.createdAt);
+      return (
+        created.getFullYear() === today.getFullYear() &&
+        created.getMonth() === today.getMonth() &&
+        created.getDate() === today.getDate()
+      );
+    });
+  };
+
+  const todayOrders = getTodayOrders();
+
   const totalOrders = orders.length;
   const uniqueStudents = [...new Set(orders.map(o => o.studentName))].length;
+  const outOfStock = items.filter(i => !i.stock).length;
+
   const popularMenus = orders.reduce((acc, curr) => {
     acc[curr.menu] = (acc[curr.menu] || 0) + curr.quantity;
     return acc;
@@ -38,10 +56,9 @@ export default function AdminDashboard() {
   const sortedMenus = Object.entries(popularMenus)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
-  const outOfStock = items.filter(i => !i.stock).length;
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>📋 관리자 요약 대시보드</Text>
 
       <Text style={styles.stat}>총 신청 수: {totalOrders}</Text>
@@ -49,13 +66,7 @@ export default function AdminDashboard() {
       <Text style={styles.stat}>품절 항목 수: {outOfStock}</Text>
 
       <Text style={[styles.stat, { marginTop: 15 }]}>🔥 인기 메뉴 Top 3:</Text>
-      {/* {sortedMenus.map(([name, count], i) => (
-        <Text key={i} style={styles.stat}>
-          {i + 1}. {name} ({count}회)
-        </Text>
-      ))} */}
-
-            <View style={styles.popularRow}>
+      <View style={styles.popularRow}>
         {sortedMenus.map(([name, count], i) => {
           const item = items.find((i) => i.name === name);
           return (
@@ -72,6 +83,16 @@ export default function AdminDashboard() {
         })}
       </View>
 
+      <Text style={[styles.stat, { marginTop: 20 }]}>🗓️ 오늘 신청 내역 ({new Date().toLocaleDateString()})</Text>
+      {todayOrders.length === 0 ? (
+        <Text style={{ color: "gray" }}>오늘 신청된 항목이 없습니다.</Text>
+      ) : (
+        todayOrders.map((order, i) => (
+          <Text key={i} style={styles.stat}>
+            {order.studentName} - {order.menu} ({order.quantity}개)
+          </Text>
+        ))
+      )}
 
       <View style={styles.buttons}>
         <TouchableOpacity style={styles.button} onPress={() => router.push("/admin/manage")}>
@@ -84,20 +105,24 @@ export default function AdminDashboard() {
           <Text style={styles.buttonText}>📊 전체 차트</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { padding: 20 },
   header: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
   stat: { fontSize: 16, marginVertical: 3 },
   buttons: { marginTop: 30 },
   button: {
-    backgroundColor: "#4CAF50", padding: 12, borderRadius: 8,
-    marginBottom: 10, alignItems: "center"
+    backgroundColor: "#5DBB9D",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: "center"
   },
-  buttonText: { color: "white", fontWeight: "bold" },  popularRow: {
+  buttonText: { color: "white", fontWeight: "bold" },
+  popularRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
@@ -124,5 +149,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#555",
   },
-
 });

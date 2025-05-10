@@ -48,6 +48,17 @@ export default function AdminOrdersScreen() {
     }
   };
 
+  const getBadgeStyle = (status) => {
+  switch (status) {
+    case "accepted":
+      return { backgroundColor: "#4CAF50" }; // 초록
+    case "rejected":
+      return { backgroundColor: "#F44336" }; // 빨강
+    default:
+      return { backgroundColor: "#9E9E9E" }; // 회색
+  }
+};
+
 
   const renderItem = ({ item }) => (
   
@@ -66,7 +77,16 @@ export default function AdminOrdersScreen() {
         <Text style={styles.text}>메뉴: {item.menu}</Text>
         <Text style={styles.text}>개수: {item.quantity}</Text>
         <Text style={styles.text}>신청시간: {new Date(item.createdAt).toLocaleString()}</Text>
-        <Text style={styles.text}>상태: {item.status}</Text>
+        <View style={styles.badgeWrapper}>
+  <Text style={[styles.badge, getBadgeStyle(item.status)]}>
+    {item.status === "pending"
+      ? "대기중"
+      : item.status === "accepted"
+      ? "수락됨"
+      : "거절됨"}
+  </Text>
+</View>
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.acceptButton}
@@ -135,4 +155,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     resizeMode: "cover",
   },
+  badgeWrapper: {
+  marginTop: 6,
+},
+badge: {
+  paddingVertical: 4,
+  paddingHorizontal: 8,
+  borderRadius: 12,
+  color: "white",
+  fontWeight: "bold",
+  textAlign: "center",
+  alignSelf: "flex-start",
+  fontSize: 13,
+},
 });

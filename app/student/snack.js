@@ -17,7 +17,7 @@ export default function DrinkScreen() {
     try {
       const res = await fetch(`${SERVER_URL}/items`);
       const data = await res.json();
-      const drinks = data.filter((item) => item.type === "snack" && item.stock);
+      const drinks = data.filter((item) => item.type === "snack");
       setItems(drinks);
     } catch (err) {
       console.error("❌ 간식 목록 불러오기 실패", err);
@@ -35,46 +35,63 @@ export default function DrinkScreen() {
   };
 
   const handleSubmit = async () => {
-  if (!studentName || !category) {
-    alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
-    return;
-  }
+    if (!studentName || !category) {
+      alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
+      return;
+    }
 
-  const payload = {
-    studentName,
-    userJob: category,
-    menu: selectedItem.name,
-    quantity,
-    // ✅ 서버에서 자동으로 처리하는 createdAt, status는 보내지 않아도 됨
-    image: selectedItem.image, // ✅ 반드시 포함되어야 함
+    const payload = {
+      studentName,
+      userJob: category,
+      menu: selectedItem.name,
+      quantity,
+      // ✅ 서버에서 자동으로 처리하는 createdAt, status는 보내지 않아도 됨
+      image: selectedItem.image, // ✅ 반드시 포함되어야 함
+    };
+
+    //console.log("✅ 선택된 이미지:", selectedItem.image);
+
+    try {
+      const res = await fetch(`${SERVER_URL}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      console.log("✅ 신청 저장 결과:", data);
+
+      alert("✅ 신청 완료!");
+      setModalVisible(false);
+    } catch (err) {
+      console.error("❌ 신청 실패", err);
+    }
   };
 
-  //console.log("✅ 선택된 이미지:", selectedItem.image);
 
-  try {
-    const res = await fetch(`${SERVER_URL}/orders`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  const renderItem = ({ item }) => {
+    const isSoldOut = item.stock === false;
 
-    const data = await res.json();
-    console.log("✅ 신청 저장 결과:", data);
+    return (
+      <TouchableOpacity
+        onPress={() => !isSoldOut && handleSelect(item)}
+        style={[styles.card, isSoldOut && { opacity: 0.4 }]}
+        disabled={isSoldOut}
+      >
+        <View style={{ position: "relative" }}>
+          <Image source={{ uri: item.image }} style={styles.image} />
 
-    alert("✅ 신청 완료!");
-    setModalVisible(false);
-  } catch (err) {
-    console.error("❌ 신청 실패", err);
-  }
-};
+          {isSoldOut && (
+            <View style={styles.soldOutBadge}>
+              <Text style={styles.soldOutText}>품절</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.name}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+  };
 
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleSelect(item)} style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <Text style={styles.name}>{item.name}</Text>
-    </TouchableOpacity>
-  );
 
   return (
     <View style={styles.container}>
@@ -140,5 +157,21 @@ const styles = StyleSheet.create({
   selected: { fontWeight: "bold", color: "blue" },
   button: {
     backgroundColor: "#4CAF50", padding: 10, borderRadius: 8, alignItems: "center"
-  }
+  },
+  soldOutBadge: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    backgroundColor: "red",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    zIndex: 1,
+  },
+  soldOutText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+
 });
