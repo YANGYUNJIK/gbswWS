@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,11 @@ import {
 } from "react-native";
 
 const SERVER_URL = "https://gbswws.onrender.com";
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const CARD_WIDTH = 250;
+const CARD_GAP = 16;
+const TOTAL_CARD_WIDTH = CARD_WIDTH * 3 + CARD_GAP * 2;
+const CARD_MARGIN_LEFT = (SCREEN_WIDTH - TOTAL_CARD_WIDTH) / 2;
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -59,13 +65,14 @@ export default function AdminDashboard() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>📋 관리자 요약 대시보드</Text>
+      <View style={styles.leftAlignedContent}>
+        <Text style={styles.header}>📋 관리자 요약 대시보드</Text>
+        <Text style={styles.stat}>총 신청 수: {totalOrders}</Text>
+        <Text style={styles.stat}>총 학생 수: {uniqueStudents}</Text>
+        <Text style={styles.stat}>품절 항목 수: {outOfStock}</Text>
+        <Text style={[styles.stat, { marginTop: 15 }]}>🔥 인기 메뉴 Top 3:</Text>
+      </View>
 
-      <Text style={styles.stat}>총 신청 수: {totalOrders}</Text>
-      <Text style={styles.stat}>총 학생 수: {uniqueStudents}</Text>
-      <Text style={styles.stat}>품절 항목 수: {outOfStock}</Text>
-
-      <Text style={[styles.stat, { marginTop: 15 }]}>🔥 인기 메뉴 Top 3:</Text>
       <View style={styles.popularRow}>
         {sortedMenus.map(([name, count], i) => {
           const item = items.find((i) => i.name === name);
@@ -82,17 +89,6 @@ export default function AdminDashboard() {
           );
         })}
       </View>
-
-      <Text style={[styles.stat, { marginTop: 20 }]}>🗓️ 오늘 신청 내역 ({new Date().toLocaleDateString()})</Text>
-      {todayOrders.length === 0 ? (
-        <Text style={{ color: "gray" }}>오늘 신청된 항목이 없습니다.</Text>
-      ) : (
-        todayOrders.map((order, i) => (
-          <Text key={i} style={styles.stat}>
-            {order.studentName} - {order.menu} ({order.quantity}개)
-          </Text>
-        ))
-      )}
 
       <View style={styles.buttons}>
         <TouchableOpacity style={styles.button} onPress={() => router.push("/admin/manage")}>
@@ -111,29 +107,51 @@ export default function AdminDashboard() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    marginTop: 30,
+    flexGrow: 1,
     backgroundColor: "#f0f4f8",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-  stat: { fontSize: 16, marginVertical: 3 },
-  buttons: { marginTop: 30 },
+  leftAlignedContent: {
+    alignItems: "flex-start",
+    marginLeft: CARD_MARGIN_LEFT,
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  stat: {
+    fontSize: 16,
+    marginVertical: 3,
+  },
+  buttons: {
+    marginTop: 30,
+    alignItems: "center",
+    width: "100%",
+  },
   button: {
+    width: "60%",
     backgroundColor: "#5DBB9D",
     padding: 12,
     borderRadius: 8,
     marginBottom: 10,
-    alignItems: "center"
+    alignItems: "center",
   },
-  buttonText: { color: "white", fontWeight: "bold" },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
   popularRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 16,
     marginTop: 10,
-    gap: 10,
   },
   popularCard: {
-    width: "30%",
+    width: 250,
     backgroundColor: "#f5f5f5",
     borderRadius: 8,
     padding: 8,
