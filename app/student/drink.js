@@ -7,7 +7,7 @@ import { StudentInfoContext } from "../../context/StudentInfoContext";
 const SERVER_URL = "https://gbswws.onrender.com";
 
 export default function DrinkScreen() {
-  const { studentName, category } = useContext(StudentInfoContext); // category는 직종
+  const { studentName, category } = useContext(StudentInfoContext); // ✅ category 불러오기
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -35,32 +35,36 @@ export default function DrinkScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!studentName || !category) {
-      alert("학생 이름 또는 직종이 설정되지 않았습니다.");
-      return;
-    }
+  if (!studentName || !category) {
+    alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
+    return;
+  }
 
-    const payload = {
-      studentName,
-      userJob: category, // "학생"이 아닌 실제 선택한 직종
-      menu: selectedItem.name,
-      quantity,
-      image: selectedItem.image, // ✅ 이미지 필드 추가
-    };
-
-    try {
-      await fetch(`${SERVER_URL}/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      alert("✅ 신청 완료!");
-      setModalVisible(false);
-    } catch (err) {
-      console.error("❌ 신청 실패", err);
-    }
+  const payload = {
+    studentName,
+    userJob: "학생",
+    menu: selectedItem.name,
+    quantity,
+    // ✅ 서버에서 자동으로 처리하는 createdAt, status는 보내지 않아도 됨
   };
+
+  try {
+    const res = await fetch(`${SERVER_URL}/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log("✅ 신청 저장 결과:", data);
+
+    alert("✅ 신청 완료!");
+    setModalVisible(false);
+  } catch (err) {
+    console.error("❌ 신청 실패", err);
+  }
+};
+
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleSelect(item)} style={styles.card}>

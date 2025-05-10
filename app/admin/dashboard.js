@@ -1,97 +1,80 @@
-import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View, Text, TouchableOpacity, StyleSheet, Platform
+} from "react-native";
+import { useRouter } from "expo-router";
 
 const SERVER_URL = "https://gbswws.onrender.com";
 
 export default function AdminDashboard() {
-  const [popularItems, setPopularItems] = useState([]);
-  const [allItems, setAllItems] = useState([]);
+  const router = useRouter();
+  const [orders, setOrders] = useState([]);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    fetchPopular();
-    fetchItems();
+    fetchData();
   }, []);
 
-  const fetchPopular = async () => {
-    try {
-      const res = await fetch(`${SERVER_URL}/orders/popular`);
-      const data = await res.json(); // [{ _id: "콜라", totalQuantity: 12 }, ...]
-      setPopularItems(data);
-    } catch (err) {
-      console.error("❌ 인기 메뉴 불러오기 실패", err);
-    }
+  const fetchData = async () => {
+    const [ordersRes, itemsRes] = await Promise.all([
+      fetch(`${SERVER_URL}/orders`),
+      fetch(`${SERVER_URL}/items`)
+    ]);
+    const ordersData = await ordersRes.json();
+    const itemsData = await itemsRes.json();
+    setOrders(ordersData);
+    setItems(itemsData);
   };
 
-  const fetchItems = async () => {
-    try {
-      const res = await fetch(`${SERVER_URL}/items`);
-      const data = await res.json();
-      setAllItems(data);
-    } catch (err) {
-      console.error("❌ 전체 항목 불러오기 실패", err);
-    }
-  };
-
-  const findItemDetails = (menuName) =>
-    allItems.find((item) => item.name === menuName);
+  const totalOrders = orders.length;
+  const uniqueStudents = [...new Set(orders.map(o => o.studentName))].length;
+  const popularMenus = orders.reduce((acc, curr) => {
+    acc[curr.menu] = (acc[curr.menu] || 0) + curr.quantity;
+    return acc;
+  }, {});
+  const sortedMenus = Object.entries(popularMenus)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+  const outOfStock = items.filter(i => !i.stock).length;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>🏆 인기 메뉴 Top 3</Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>📋 관리자 요약 대시보드</Text>
 
-      {popularItems.map((entry, index) => {
-        const item = findItemDetails(entry._id);
-        return (
-          <View key={index} style={styles.card}>
-            {item?.image && (
-              <Image source={{ uri: item.image }} style={styles.image} />
-            )}
-            <View style={styles.info}>
-              <Text style={styles.name}>{entry._id}</Text>
-              <Text style={styles.sub}>
-                신청 수: {entry.totalQuantity} / 종류: {item?.type || "알 수 없음"}
-              </Text>
-            </View>
-          </View>
-        );
-      })}
-    </ScrollView>
+      <Text style={styles.stat}>총 신청 수: {totalOrders}</Text>
+      <Text style={styles.stat}>총 학생 수: {uniqueStudents}</Text>
+      <Text style={styles.stat}>품절 항목 수: {outOfStock}</Text>
+
+      <Text style={[styles.stat, { marginTop: 15 }]}>🔥 인기 메뉴 Top 3:</Text>
+      {sortedMenus.map(([name, count], i) => (
+        <Text key={i} style={styles.stat}>
+          {i + 1}. {name} ({count}회)
+        </Text>
+      ))}
+
+      <View style={styles.buttons}>
+        <TouchableOpacity style={styles.button} onPress={() => router.push("/admin/manage")}>
+          <Text style={styles.buttonText}>📦 항목 관리</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => router.push("/admin/orders")}>
+          <Text style={styles.buttonText}>📋 신청 관리</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => router.push("/admin/stats")}>
+          <Text style={styles.buttonText}>📊 전체 차트</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
+  container: { flex: 1, padding: 20 },
+  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
+  stat: { fontSize: 16, marginVertical: 3 },
+  buttons: { marginTop: 30 },
+  button: {
+    backgroundColor: "#4CAF50", padding: 12, borderRadius: 8,
+    marginBottom: 10, alignItems: "center"
   },
-  header: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  image: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  info: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  sub: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 4,
-  },
+  buttonText: { color: "white", fontWeight: "bold" }
 });
