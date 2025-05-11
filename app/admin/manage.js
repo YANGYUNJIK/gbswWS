@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
   Image,
   Modal,
@@ -8,6 +9,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -18,6 +20,7 @@ const SERVER_URL = Platform.OS === "web"
   : "https://gbswws.onrender.com";
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dfwaukxfs/upload";
 const UPLOAD_PRESET = "unsigned";
+const DEFAULT_IMAGE_URL = "https://res.cloudinary.com/dfwaukxfs/image/upload/v1746598811/artxp8kgy5zhdmgfospd.webp";
 
 const socket = io(SERVER_URL);
 
@@ -41,6 +44,14 @@ export default function ManageItemsScreen() {
   };
 
   useEffect(() => { fetchItems(); }, []);
+
+  const showToast = (message) => {
+    if (Platform.OS === "android") {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      alert(message);
+    }
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -87,7 +98,11 @@ export default function ManageItemsScreen() {
       if (!imageUrl) return;
     }
 
-    const payload = { name, type, image: imageUrl || "", stock };
+    if (!imageUrl) {
+      imageUrl = DEFAULT_IMAGE_URL;
+    }
+
+    const payload = { name, type, image: imageUrl, stock };
 
     const method = editId ? "PUT" : "POST";
     const endpoint = editId ? `${SERVER_URL}/items/${editId}` : `${SERVER_URL}/items`;
@@ -98,6 +113,7 @@ export default function ManageItemsScreen() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      showToast(editId ? "✅ 수정 완료" : "✅ 등록 완료");
       resetForm();
       fetchItems();
     } catch (err) {
@@ -106,8 +122,20 @@ export default function ManageItemsScreen() {
   };
 
   const handleDelete = async (id) => {
+    const confirm = Platform.OS === "web"
+      ? window.confirm("정말 삭제하시겠습니까?")
+      : await new Promise((resolve) => {
+          Alert.alert("삭제 확인", "정말 삭제하시겠습니까?", [
+            { text: "취소", onPress: () => resolve(false) },
+            { text: "삭제", onPress: () => resolve(true) },
+          ]);
+        });
+
+    if (!confirm) return;
+
     try {
       await fetch(`${SERVER_URL}/items/${id}`, { method: "DELETE" });
+      showToast("🗑️ 삭제 완료");
       fetchItems();
     } catch (err) {
       console.error("❌ 삭제 실패", err);
@@ -136,7 +164,7 @@ export default function ManageItemsScreen() {
     <View style={styles.card}>
       <View style={styles.cardImageWrapper}>
         <Image
-          source={{ uri: item.image || "https://via.placeholder.com/100?text=No+Image" }}
+          source={{ uri: item.image || DEFAULT_IMAGE_URL }}
           style={styles.cardImage}
         />
       </View>
