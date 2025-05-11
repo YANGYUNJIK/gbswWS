@@ -194,11 +194,13 @@ function LayoutContent() {
         }}
       >
         {(isTeacher ? [
+          { label: "👩‍🏫 / 👨‍🏫 메인", route: "/teacher" },
           { label: "📦 간식 관리", route: "/admin/manage" },
           { label: "📋 신청 관리", route: "/admin/orders" },
           { label: "📊 대시보드", route: "/admin/dashboard" },
           { label: "👥 사용자 관리", route: "/admin/users" },
         ] : isStudent ? [
+          { label: "👩‍🎓 / 👨‍🎓 메인", route: "/student" },
           { label: "🥤 음료 신청", route: "/student/drink" },
           { label: "🍪 간식 신청", route: "/student/snack" },
           { label: "📄 신청 내역", route: "/student/orders" },
