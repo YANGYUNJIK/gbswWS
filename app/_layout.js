@@ -1,4 +1,4 @@
-// ✅ _layout.js (학생 + 선생님 종 실시간 반영 완전 적용 - 안정화)
+// ✅ _layout.js (학생 + 선생님 종 실시간 반영 완성본)
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -6,8 +6,9 @@ import { io } from "socket.io-client";
 import { StudentInfoContext, StudentInfoProvider } from "../context/StudentInfoContext";
 
 const SERVER_URL = Platform.OS === "web"
-  ? "http://localhost:3000"       // 로컬 개발 중이라면 이거!
+  ? "http://localhost:3000"
   : "https://gbswws.onrender.com";
+
 const socket = io(SERVER_URL);
 
 function LayoutContent() {
@@ -20,6 +21,7 @@ function LayoutContent() {
   const [isTeacher, setIsTeacher] = useState(false);
   const [isStudent, setIsStudent] = useState(false);
 
+  // ✅ D-Day 설정
   useEffect(() => {
     const targetDate = new Date("2025-09-19");
     const today = new Date();
@@ -28,6 +30,7 @@ function LayoutContent() {
     setDDayText(`📅 2025 전국기능경기대회 D-${dayDiff}`);
   }, []);
 
+  // ✅ 페이지 경로에 따라 선생님/학생 분기
   useEffect(() => {
     const path = router.pathname || segments.join("/") || "";
     const admin = path.includes("admin");
@@ -36,38 +39,60 @@ function LayoutContent() {
 
     setIsTeacher(admin || teacher);
     setIsStudent(student);
+  }, [router.pathname, segments]);
 
-    // ✅ 선생님: 최초 대기 주문 수 가져오기
-    if (admin || teacher) {
-      fetch(`${SERVER_URL}/orders`)
-        .then((res) => res.json())
-        .then((data) => {
-          const pending = data.filter((o) => o.status === "pending");
-          setPendingCount(pending.length);
-        });
-    }
+  // ✅ 선생님 종 실시간 반영
+  useEffect(() => {
+    if (!isTeacher) return;
 
-    // ✅ 소켓 이벤트 등록
-    socket.on("newOrder", () => {
-      setPendingCount((prev) => prev + 1);
-    });
+    const fetchPending = async () => {
+      try {
+        const res = await fetch(`${SERVER_URL}/orders`);
+        const data = await res.json();
+        const pending = data.filter((o) => o.status === "pending");
+        setPendingCount(pending.length);
+      } catch (err) {
+        console.error("❌ 처리 대기 주문 불러오기 실패", err);
+      }
+    };
 
-    socket.on("orderUpdated", (order) => {
-      if ((admin || teacher) && order.status !== "pending") {
+    fetchPending();
+
+    const handleNewOrder = () => setPendingCount((prev) => prev + 1);
+    const handleOrderUpdated = (order) => {
+      if (order.status !== "pending") {
         setPendingCount((prev) => Math.max(prev - 1, 0));
       }
-      if (student && studentName && order.studentName === studentName) {
-        console.log("🔔 학생 알림 발생!");
-        setStudentAlert(true);
-      }
-    });
+    };
+
+    socket.on("newOrder", handleNewOrder);
+    socket.on("orderUpdated", handleOrderUpdated);
 
     return () => {
-      socket.off("newOrder");
-      socket.off("orderUpdated");
+      socket.off("newOrder", handleNewOrder);
+      socket.off("orderUpdated", handleOrderUpdated);
     };
-  }, []);
+  }, [isTeacher]);
 
+  // ✅ 학생 종 실시간 반영
+  useEffect(() => {
+    if (!isStudent || !studentName) return;
+
+    const handleOrderUpdated = (order) => {
+      if (order.studentName === studentName) {
+        console.log("🔔 학생 알림 발생!", order.studentName);
+        setStudentAlert(true);
+      }
+    };
+
+    socket.on("orderUpdated", handleOrderUpdated);
+
+    return () => {
+      socket.off("orderUpdated", handleOrderUpdated);
+    };
+  }, [isStudent, studentName]);
+
+  // ✅ 종 눌렀을 때
   const handleAlert = () => {
     if (isTeacher) {
       Alert.alert("🔔 알림", pendingCount > 0 ? `${pendingCount}개의 신청이 처리 대기 중입니다.` : "새로운 신청이 없습니다.");
@@ -77,6 +102,7 @@ function LayoutContent() {
     }
   };
 
+  // ✅ 계정 처리
   const handleAccount = () => {
     Alert.alert("👤 계정", "로그아웃하시겠습니까?", [
       { text: "취소", style: "cancel" },
@@ -114,7 +140,7 @@ function LayoutContent() {
                   <View style={styles.badge}><Text style={styles.badgeText}>{pendingCount}</Text></View>
                 )}
                 {isStudent && studentAlert && (
-                  <View style={[styles.badge, { minWidth: 10, paddingHorizontal: 0 }]} />
+                  <View style={[styles.badge, { minWidth: 10, height: 10, borderRadius: 5, paddingHorizontal: 0 }]} />
                 )}
               </TouchableOpacity>
             )}
