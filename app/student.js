@@ -1,11 +1,15 @@
 import { useRouter } from "expo-router";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
 export default function StudentMenu() {
   const { studentName, category } = useContext(StudentInfoContext);
   const router = useRouter();
+
+  useEffect(() => {
+  console.log("✅ 현재 학생 이름:", studentName);
+}, [studentName]);
 
   return (
     <View style={styles.container}>

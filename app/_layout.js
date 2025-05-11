@@ -1,4 +1,4 @@
-// ✅ _layout.js (teacher 경로 인식 추가)
+// ✅ _layout.js (학생 + 선생님 종 실시간 반영 완전 적용 - 안정화)
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -35,6 +35,7 @@ function LayoutContent() {
     setIsTeacher(admin || teacher);
     setIsStudent(student);
 
+    // ✅ 선생님: 최초 대기 주문 수 가져오기
     if (admin || teacher) {
       fetch(`${SERVER_URL}/orders`)
         .then((res) => res.json())
@@ -42,31 +43,28 @@ function LayoutContent() {
           const pending = data.filter((o) => o.status === "pending");
           setPendingCount(pending.length);
         });
-
-      socket.on("newOrder", () => {
-        setPendingCount((prev) => prev + 1);
-      });
-
-      socket.on("orderUpdated", (order) => {
-        if (order.status !== "pending") {
-          setPendingCount((prev) => Math.max(prev - 1, 0));
-        }
-      });
     }
 
-    if (student) {
-      socket.on("orderUpdated", (order) => {
-        if (studentName && order.studentName === studentName) {
-          setStudentAlert(true);
-        }
-      });
-    }
+    // ✅ 소켓 이벤트 등록
+    socket.on("newOrder", () => {
+      setPendingCount((prev) => prev + 1);
+    });
+
+    socket.on("orderUpdated", (order) => {
+      if ((admin || teacher) && order.status !== "pending") {
+        setPendingCount((prev) => Math.max(prev - 1, 0));
+      }
+      if (student && studentName && order.studentName === studentName) {
+        console.log("🔔 학생 알림 발생!");
+        setStudentAlert(true);
+      }
+    });
 
     return () => {
       socket.off("newOrder");
       socket.off("orderUpdated");
     };
-  }, [router.pathname, segments, studentName]);
+  }, []);
 
   const handleAlert = () => {
     if (isTeacher) {
