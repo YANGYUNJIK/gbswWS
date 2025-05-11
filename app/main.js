@@ -2,14 +2,15 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
-  Platform,
   StyleSheet, Text, TextInput, TouchableOpacity, View
 } from "react-native";
+//
 
+// const SERVER_URL = Platform.OS === "web"
+//   ? "http://localhost:3000"
+//   : "https://gbswws.onrender.com"; // 배포 시에는 이 주소 사용
+const SERVER_URL = "https://gbswws.onrender.com";
 
-const SERVER_URL = Platform.OS === "web"
-  ? "http://localhost:3000"
-  : "https://gbswws.onrender.com"; // 배포 시에는 이 주소 사용
 
 export default function MainScreen() {
   const router = useRouter();
@@ -31,13 +32,14 @@ export default function MainScreen() {
         body: JSON.stringify({ id, password, role }),
       });
 
+
       const data = await res.json();
 
       if (!res.ok) {
         Alert.alert("❌ 로그인 실패", data.message || "아이디 또는 비밀번호가 틀렸습니다.");
         return;
       }
-
+//
       Alert.alert("✅ 로그인 성공");
 
       // ✅ 이동
