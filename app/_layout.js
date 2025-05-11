@@ -1,11 +1,13 @@
 // ✅ _layout.js (학생 + 선생님 종 실시간 반영 완전 적용 - 안정화)
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useContext, useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { io } from "socket.io-client";
 import { StudentInfoContext, StudentInfoProvider } from "../context/StudentInfoContext";
 
-const SERVER_URL = "https://gbswws.onrender.com";
+const SERVER_URL = Platform.OS === "web"
+  ? "http://localhost:3000"       // 로컬 개발 중이라면 이거!
+  : "https://gbswws.onrender.com";
 const socket = io(SERVER_URL);
 
 function LayoutContent() {
