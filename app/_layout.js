@@ -1,11 +1,22 @@
-import { Stack, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
-import { StudentInfoProvider } from "../context/StudentInfoContext";
+// ✅ _layout.js (teacher 경로 인식 추가)
+import { Stack, useRouter, useSegments } from "expo-router";
+import { useContext, useEffect, useState } from "react";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { io } from "socket.io-client";
+import { StudentInfoContext, StudentInfoProvider } from "../context/StudentInfoContext";
 
-export default function Layout() {
+const SERVER_URL = "https://gbswws.onrender.com";
+const socket = io(SERVER_URL);
+
+function LayoutContent() {
   const router = useRouter();
+  const segments = useSegments();
+  const { studentName } = useContext(StudentInfoContext);
   const [dDayText, setDDayText] = useState("");
+  const [pendingCount, setPendingCount] = useState(0);
+  const [studentAlert, setStudentAlert] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
+  const [isStudent, setIsStudent] = useState(false);
 
   useEffect(() => {
     const targetDate = new Date("2025-09-19");
@@ -15,8 +26,55 @@ export default function Layout() {
     setDDayText(`📅 2025 전국기능경기대회 D-${dayDiff}`);
   }, []);
 
+  useEffect(() => {
+    const path = router.pathname || segments.join("/") || "";
+    const admin = path.includes("admin");
+    const teacher = path.includes("teacher");
+    const student = path.includes("student");
+
+    setIsTeacher(admin || teacher);
+    setIsStudent(student);
+
+    if (admin || teacher) {
+      fetch(`${SERVER_URL}/orders`)
+        .then((res) => res.json())
+        .then((data) => {
+          const pending = data.filter((o) => o.status === "pending");
+          setPendingCount(pending.length);
+        });
+
+      socket.on("newOrder", () => {
+        setPendingCount((prev) => prev + 1);
+      });
+
+      socket.on("orderUpdated", (order) => {
+        if (order.status !== "pending") {
+          setPendingCount((prev) => Math.max(prev - 1, 0));
+        }
+      });
+    }
+
+    if (student) {
+      socket.on("orderUpdated", (order) => {
+        if (studentName && order.studentName === studentName) {
+          setStudentAlert(true);
+        }
+      });
+    }
+
+    return () => {
+      socket.off("newOrder");
+      socket.off("orderUpdated");
+    };
+  }, [router.pathname, segments, studentName]);
+
   const handleAlert = () => {
-    Alert.alert("🔔 알림", "새로운 알림이 없습니다.");
+    if (isTeacher) {
+      Alert.alert("🔔 알림", pendingCount > 0 ? `${pendingCount}개의 신청이 처리 대기 중입니다.` : "새로운 신청이 없습니다.");
+    } else if (isStudent) {
+      Alert.alert("📢 알림", "신청하신 항목이 처리되었습니다.");
+      setStudentAlert(false);
+    }
   };
 
   const handleAccount = () => {
@@ -33,42 +91,78 @@ export default function Layout() {
   };
 
   return (
-    <StudentInfoProvider>
-      <Stack
-        screenOptions={{
-          headerShown: true,
-          headerBackVisible: false, // ✅ 모든 화면에서 뒤로가기 제거
-          headerTitle: () => (
-            <TouchableOpacity
-              onPress={() => router.replace("/main")}
-              style={{ alignItems: "center", justifyContent: "center" }}
-            >
-              <Text style={{ fontSize: 20, fontWeight: "bold", color: "#333" }}>
-                {dDayText}
-              </Text>
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View
-              style={{
-                flexDirection: "row",
-                marginRight: 16,
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <TouchableOpacity onPress={handleAlert}>
+    <Stack
+      screenOptions={{
+        headerShown: true,
+        headerBackVisible: false,
+        headerTitle: () => (
+          <TouchableOpacity
+            onPress={() => router.replace("/main")}
+            style={{ alignItems: "center", justifyContent: "center" }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#333" }}>
+              {dDayText}
+            </Text>
+          </TouchableOpacity>
+        ),
+        headerRight: () => (
+          <View style={styles.headerRight}>
+            {(isTeacher || isStudent) && (
+              <TouchableOpacity onPress={handleAlert} style={{ position: "relative" }}>
                 <Text style={{ fontSize: 20 }}>🔔</Text>
+                {isTeacher && pendingCount > 0 && (
+                  <View style={styles.badge}><Text style={styles.badgeText}>{pendingCount}</Text></View>
+                )}
+                {isStudent && studentAlert && (
+                  <View style={[styles.badge, { minWidth: 10, paddingHorizontal: 0 }]} />
+                )}
               </TouchableOpacity>
-            </View>
-          ),
-          headerStyle: {
-            backgroundColor: "#f5f9ff",
-            borderBottomWidth: 1,
-            borderBottomColor: "#ddd",
-          },
-        }}
-      />
+            )}
+            <TouchableOpacity onPress={handleAccount}>
+              <Text style={{ fontSize: 18 }}>👤</Text>
+            </TouchableOpacity>
+          </View>
+        ),
+        headerStyle: {
+          backgroundColor: "#f5f9ff",
+          borderBottomWidth: 1,
+          borderBottomColor: "#ddd",
+        },
+      }}
+    />
+  );
+}
+
+export default function Layout() {
+  return (
+    <StudentInfoProvider>
+      <LayoutContent />
     </StudentInfoProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  headerRight: {
+    flexDirection: "row",
+    marginRight: 16,
+    alignItems: "center",
+    gap: 10,
+  },
+  badge: {
+    position: "absolute",
+    top: -5,
+    right: -6,
+    backgroundColor: "red",
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    minWidth: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "white",
+    fontSize: 11,
+    fontWeight: "bold",
+  },
+});
