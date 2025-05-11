@@ -43,7 +43,7 @@ export default function Layout() {
               onPress={() => router.replace("/main")}
               style={{ alignItems: "center", justifyContent: "center" }}
             >
-              <Text style={{ fontSize: 16, fontWeight: "bold", color: "#333" }}>
+              <Text style={{ fontSize: 20, fontWeight: "bold", color: "#333" }}>
                 {dDayText}
               </Text>
             </TouchableOpacity>
@@ -58,7 +58,7 @@ export default function Layout() {
               }}
             >
               <TouchableOpacity onPress={handleAlert}>
-                <Text style={{ fontSize: 18 }}>🔔</Text>
+                <Text style={{ fontSize: 20 }}>🔔</Text>
               </TouchableOpacity>
             </View>
           ),

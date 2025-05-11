@@ -1,9 +1,10 @@
-// ✅ /app/main.js (좌우 분할 UI 및 이미지 변경 적용)
+// ✅ /app/main.js (ImageBackground로 leftPane 투명 배경 적용)
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
 import {
   Alert,
   Image,
+  ImageBackground,
   Platform,
   StyleSheet,
   Text,
@@ -67,10 +68,15 @@ export default function MainScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.leftPane}>
-        <Image source={imageSource} style={styles.image} />
+        <ImageBackground
+          source={require("../assets/test1.jpg")}
+          style={styles.fullImage}
+          imageStyle={{ opacity: 0.2 }}
+        />
       </View>
 
       <View style={styles.rightPane}>
+        <Image source={imageSource} style={styles.inlineImage} />
         <Text style={styles.title}>📚 간편 로그인</Text>
 
         <View style={styles.selector}>
@@ -118,20 +124,26 @@ const styles = StyleSheet.create({
   },
   leftPane: {
     flex: 1,
-    backgroundColor: "#e3edf7",
+  },
+  fullImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
-  },
-  image: {
-    width: "80%",
-    height: "80%",
-    resizeMode: "contain",
   },
   rightPane: {
     flex: 1,
     justifyContent: "center",
     padding: 40,
     backgroundColor: "#fff",
+  },
+  inlineImage: {
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+    resizeMode: "contain",
+    marginBottom: 20,
   },
   title: {
     fontSize: 24,
