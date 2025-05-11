@@ -1,9 +1,15 @@
+// ✅ /app/main.js (좌우 분할 UI 및 이미지 변경 적용)
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
 import {
   Alert,
+  Image,
   Platform,
-  StyleSheet, Text, TextInput, TouchableOpacity, View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
@@ -15,7 +21,7 @@ export default function MainScreen() {
   const router = useRouter();
   const { saveStudentInfo } = useContext(StudentInfoContext);
 
-  const [role, setRole] = useState("student"); // "student" or "teacher"
+  const [role, setRole] = useState("student");
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
 
@@ -41,9 +47,8 @@ export default function MainScreen() {
 
       Alert.alert("✅ 로그인 성공");
 
-      // ✅ Context에 저장
       if (role === "student") {
-        saveStudentInfo(data.user.name, data.user.category); // 핵심 수정
+        saveStudentInfo(data.user.name, data.user.category);
         router.push("/student");
       } else {
         router.push("/teacher");
@@ -55,65 +60,107 @@ export default function MainScreen() {
     }
   };
 
+  const imageSource = id && password
+    ? require("../assets/world2.png")
+    : require("../assets/world1.png");
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📚 간편 로그인</Text>
-
-      <View style={styles.selector}>
-        <TouchableOpacity
-          style={[styles.roleBtn, role === "student" && styles.activeBtn]}
-          onPress={() => setRole("student")}
-        >
-          <Text style={styles.roleText}>학생</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.roleBtn, role === "teacher" && styles.activeBtn]}
-          onPress={() => setRole("teacher")}
-        >
-          <Text style={styles.roleText}>선생님</Text>
-        </TouchableOpacity>
+      <View style={styles.leftPane}>
+        <Image source={imageSource} style={styles.image} />
       </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="아이디"
-        value={id}
-        onChangeText={setId}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="비밀번호"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.rightPane}>
+        <Text style={styles.title}>📚 간편 로그인</Text>
 
-      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
-        <Text style={styles.loginText}>로그인</Text>
-      </TouchableOpacity>
+        <View style={styles.selector}>
+          <TouchableOpacity
+            style={[styles.roleBtn, role === "student" && styles.activeBtn]}
+            onPress={() => setRole("student")}
+          >
+            <Text style={styles.roleText}>학생</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.roleBtn, role === "teacher" && styles.activeBtn]}
+            onPress={() => setRole("teacher")}
+          >
+            <Text style={styles.roleText}>선생님</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TextInput
+          style={styles.input}
+          placeholder="아이디"
+          value={id}
+          onChangeText={setId}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="비밀번호"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
+          <Text style={styles.loginText}>로그인</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: "center", backgroundColor: "#f2f4f8" },
-  title: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 30 },
-  selector: { flexDirection: "row", justifyContent: "center", marginBottom: 20, gap: 10 },
+  container: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#f2f4f8",
+  },
+  leftPane: {
+    flex: 1,
+    backgroundColor: "#e3edf7",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  image: {
+    width: "80%",
+    height: "80%",
+    resizeMode: "contain",
+  },
+  rightPane: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 40,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 30,
+  },
+  selector: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+    gap: 10,
+  },
   roleBtn: {
     padding: 10,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 6,
     minWidth: 80,
-    alignItems: "center"
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
   activeBtn: {
     backgroundColor: "#5DBB9D",
-    borderColor: "#5DBB9D"
+    borderColor: "#5DBB9D",
   },
   roleText: {
     color: "#fff",
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   input: {
     backgroundColor: "#fff",
@@ -121,17 +168,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#ccc"
+    borderColor: "#ccc",
   },
   loginBtn: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#5DBB9D",
     padding: 14,
     borderRadius: 8,
-    alignItems: "center"
+    alignItems: "center",
   },
   loginText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 16
-  }
+    fontSize: 16,
+  },
 });
