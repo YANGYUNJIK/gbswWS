@@ -43,5 +43,17 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// Server/routes/items.js
+router.delete("/:id", async (req, res) => {
+  try {
+    await Item.findByIdAndDelete(req.params.id);
+    res.json({ message: "삭제 완료" });
+  } catch (err) {
+    console.error("❌ 삭제 실패", err);
+    res.status(500).json({ error: "삭제 실패" });
+  }
+});
+
+
 
 module.exports = router;
