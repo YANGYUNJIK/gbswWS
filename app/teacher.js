@@ -28,6 +28,13 @@ export default function TeacherScreen() {
       >
         <Text style={styles.buttonText}>📈 요약 대시보드</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: "#4A90E2" }]}
+        onPress={() => router.push("/admin/users")}
+      >
+        <Text style={styles.buttonText}>👥 사용자 관리</Text>
+      </TouchableOpacity>
     </View>
   );
 }

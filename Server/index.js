@@ -5,45 +5,55 @@ const http = require("http");
 const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
 const app = express();
 const server = http.createServer(app);
+
+// ✅ CORS 설정 (Netlify & 로컬 웹 허용)
+app.use(cors({
+  origin: [
+    "https://gbswws.netlify.app",  // ✅ Netlify (운영용)
+    "http://localhost:8081",       // ✅ 로컬 개발용 웹
+    "http://localhost:3000",       // ✅ 로컬 서버 (예방 차원)
+  ],
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  credentials: true
+}));
+
+
+app.use(express.json());
+
+// ✅ 소켓 연결 (모든 출처 허용)
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST", "PATCH", "DELETE"] },
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+  },
 });
 
+// ✅ MongoDB 모델 불러오기
 const Order = require("./models/Order");
 const Item = require("./models/Item");
+
+// ✅ 라우터 불러오기
 const itemsRoutes = require("./routes/items");
 const ordersRoutes = require("./routes/orders");
 const authRoutes = require("./routes/auth");
 const studentRoutes = require("./routes/students");
 const teacherRoutes = require("./routes/teachers");
 
-app.use("/students", studentRoutes);
-app.use("/teachers", teacherRoutes);
-app.use("/auth", authRoutes);
-//app.use(cors());
-const corsOptions = {
-  origin: "https://gbswws.netlify.app", // ✅ Netlify 주소로 바꿔주세요
-  methods: ["GET", "POST", "PATCH", "DELETE"],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-app.use(express.json());
+// ✅ 라우터 등록
 app.use("/items", itemsRoutes);
 app.use("/orders", ordersRoutes);
+app.use("/auth", authRoutes);
+app.use("/students", studentRoutes);
+app.use("/teachers", teacherRoutes);
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ MongoDB 연결됨"))
-  .catch((err) => console.log("❌ MongoDB 연결 실패", err));
-
+// ✅ 소켓 연결 감지
 io.on("connection", (socket) => {
-  //console.log("🟢 클라이언트 접속됨:", socket.id);
-
+  // console.log("🟢 소켓 연결됨:", socket.id);
   socket.on("disconnect", () => {
-  //  console.log("🔴 클라이언트 연결 해제:", socket.id);
+    // console.log("🔴 소켓 연결 해제:", socket.id);
   });
 });
 
@@ -76,7 +86,15 @@ app.patch("/orders/:id", async (req, res) => {
   }
 });
 
+// ✅ 서버 실행
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 서버 실행 중 (포트 ${PORT})`);
-});
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("✅ MongoDB 연결됨");
+    server.listen(PORT, () => {
+      console.log(`🚀 서버 실행 중 (포트 ${PORT})`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB 연결 실패", err);
+  });

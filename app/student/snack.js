@@ -1,11 +1,16 @@
 import { useContext, useEffect, useState } from "react";
 import {
   Dimensions,
-  FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View
+  FlatList, Image, Modal,
+  Platform,
+  StyleSheet, Text, TouchableOpacity, View
 } from "react-native";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
-const SERVER_URL = "https://gbswws.onrender.com";
+const SERVER_URL = Platform.OS === "web"
+  ? "http://localhost:3000"       // 로컬 개발 중이라면 이거!
+  : "https://gbswws.onrender.com";
+
 const screenWidth = Dimensions.get("window").width;
 const CARD_GAP = 60;
 const CARD_WIDTH = (screenWidth - CARD_GAP * 5) / 4;

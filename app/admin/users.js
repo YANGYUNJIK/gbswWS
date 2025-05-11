@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-  Alert, FlatList, StyleSheet, Text, TextInput,
+  Alert, FlatList,
+  Platform,
+  StyleSheet, Text, TextInput,
   TouchableOpacity, View,
 } from "react-native";
 
-const SERVER_URL = "https://gbswws.onrender.com";
+const SERVER_URL = Platform.OS === "web"
+  ? "http://localhost:3000"
+  : "https://gbswws.onrender.com";
 
 export default function UserManagementScreen() {
   const [role, setRole] = useState("student");

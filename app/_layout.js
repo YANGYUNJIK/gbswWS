@@ -60,9 +60,6 @@ export default function Layout() {
               <TouchableOpacity onPress={handleAlert}>
                 <Text style={{ fontSize: 18 }}>🔔</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleAccount}>
-                <Text style={{ fontSize: 18 }}>👤</Text>
-              </TouchableOpacity>
             </View>
           ),
           headerStyle: {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,7 +11,10 @@ import {
   View,
 } from "react-native";
 
-const SERVER_URL = "https://gbswws.onrender.com";
+const SERVER_URL = Platform.OS === "web"
+  ? "http://localhost:3000"
+  : "https://gbswws.onrender.com";
+
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CARD_WIDTH = 250;
 const CARD_GAP = 16;

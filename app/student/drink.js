@@ -1,11 +1,17 @@
 import { useContext, useEffect, useState } from "react";
 import {
   Dimensions,
-  FlatList, Image, Modal, StyleSheet, Text, TouchableOpacity, View
+  FlatList, Image, Modal,
+  Platform,
+  StyleSheet, Text, TouchableOpacity, View,
 } from "react-native";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
-const SERVER_URL = "https://gbswws.onrender.com";
+const SERVER_URL = Platform.OS === "web"
+  ? "http://localhost:3000"       // 로컬 개발 중이라면 이거!
+  : "https://gbswws.onrender.com";
+
+
 const screenWidth = Dimensions.get("window").width;
 const CARD_GAP = 60;
 const CARD_WIDTH = (screenWidth - CARD_GAP * 5) / 4;
@@ -20,11 +26,14 @@ export default function DrinkScreen() {
   const fetchItems = async () => {
     try {
       const res = await fetch(`${SERVER_URL}/items`);
+      if (!res.ok) {
+        throw new Error(`서버 응답 오류: ${res.status}`);
+      }
       const data = await res.json();
       const drinks = data.filter((item) => item.type === "drink");
       setItems(drinks);
     } catch (err) {
-      console.error("❌ 음료 목록 불러오기 실패", err);
+      console.error("❌ 음료 목록 불러오기 실패:", err);
     }
   };
 
@@ -40,6 +49,7 @@ export default function DrinkScreen() {
 
   const handleSubmit = async () => {
     if (!studentName || !category) {
+      console.warn("❗ 학생 이름 또는 카테고리 누락됨:", studentName, category);
       alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
       return;
     }
@@ -60,12 +70,17 @@ export default function DrinkScreen() {
       });
 
       const data = await res.json();
-      console.log("✅ 신청 저장 결과:", data);
 
+      if (!res.ok) {
+        throw new Error(data.message || "신청 실패");
+      }
+
+      console.log("✅ 신청 저장 결과:", data);
       alert("✅ 신청 완료!");
       setModalVisible(false);
     } catch (err) {
-      console.error("❌ 신청 실패", err);
+      console.error("❌ 신청 실패:", err);
+      alert("신청 중 오류가 발생했습니다.");
     }
   };
 
@@ -91,7 +106,6 @@ export default function DrinkScreen() {
       >
         <View style={{ position: "relative" }}>
           <Image source={{ uri: item.image }} style={styles.image} />
-
           {isSoldOut && (
             <View style={styles.soldOutBadge}>
               <Text style={styles.soldOutText}>품절</Text>
@@ -118,17 +132,12 @@ export default function DrinkScreen() {
       <Modal visible={modalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>
-              {selectedItem?.name}
-            </Text>
-
+            <Text style={styles.modalTitle}>{selectedItem?.name}</Text>
             <View style={styles.quantityControl}>
               <TouchableOpacity onPress={() => setQuantity((prev) => Math.max(1, prev - 1))}>
                 <Text style={styles.arrow}>{"<"}</Text>
               </TouchableOpacity>
-
               <Text style={styles.quantityText}>{quantity}개</Text>
-
               <TouchableOpacity onPress={() => setQuantity((prev) => Math.min(10, prev + 1))}>
                 <Text style={styles.arrow}>{">"}</Text>
               </TouchableOpacity>

@@ -1,19 +1,19 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   Alert,
-  StyleSheet, Text, TextInput, TouchableOpacity, View
+  Platform,
+  StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from "react-native";
-//
+import { StudentInfoContext } from "../context/StudentInfoContext";
 
-// const SERVER_URL = Platform.OS === "web"
-//   ? "http://localhost:3000"
-//   : "https://gbswws.onrender.com"; // 배포 시에는 이 주소 사용
-const SERVER_URL = "https://gbswws.onrender.com";
-
+const SERVER_URL = Platform.OS === "web"
+  ? "http://localhost:3000"
+  : "https://gbswws.onrender.com";
 
 export default function MainScreen() {
   const router = useRouter();
+  const { saveStudentInfo } = useContext(StudentInfoContext);
 
   const [role, setRole] = useState("student"); // "student" or "teacher"
   const [id, setId] = useState("");
@@ -32,19 +32,19 @@ export default function MainScreen() {
         body: JSON.stringify({ id, password, role }),
       });
 
-
       const data = await res.json();
 
       if (!res.ok) {
         Alert.alert("❌ 로그인 실패", data.message || "아이디 또는 비밀번호가 틀렸습니다.");
         return;
       }
-//
+
       Alert.alert("✅ 로그인 성공");
 
-      // ✅ 이동
+      // ✅ Context에 저장
       if (role === "student") {
-        router.push({ pathname: "/student", params: { name: data.user.name, category: data.user.category } });
+        saveStudentInfo(data.user.name, data.user.category); // 핵심 수정
+        router.push("/student");
       } else {
         router.push("/teacher");
       }

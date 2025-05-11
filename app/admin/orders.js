@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -10,7 +11,9 @@ import {
   View,
 } from "react-native";
 
-const SERVER_URL = "https://gbswws.onrender.com";
+const SERVER_URL = Platform.OS === "web"
+  ? "http://localhost:3000"
+  : "https://gbswws.onrender.com";
 
 export default function AdminOrdersScreen() {
   const [orders, setOrders] = useState([]);
