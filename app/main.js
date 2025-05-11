@@ -123,7 +123,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f2f4f8",
   },
   leftPane: {
-    flex: 1,
+    width: "50%", // ← 절반으로 고정
+    height: "100%",
   },
   fullImage: {
     flex: 1,
@@ -133,7 +134,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   rightPane: {
-    flex: 1,
+    width: "50%", // ← 절반으로 고정
+    height: "100%",
     justifyContent: "center",
     padding: 40,
     backgroundColor: "#fff",
