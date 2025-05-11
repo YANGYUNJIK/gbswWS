@@ -22,7 +22,15 @@ const teacherRoutes = require("./routes/teachers");
 app.use("/students", studentRoutes);
 app.use("/teachers", teacherRoutes);
 app.use("/auth", authRoutes);
-app.use(cors());
+//app.use(cors());
+const corsOptions = {
+  origin: "https://gbswws.netlify.app", // ✅ Netlify 주소로 바꿔주세요
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use("/items", itemsRoutes);
 app.use("/orders", ordersRoutes);
