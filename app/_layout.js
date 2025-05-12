@@ -26,11 +26,13 @@ function LayoutContent() {
   const router = useRouter();
   const segments = useSegments();
   const { studentName } = useContext(StudentInfoContext);
+
   const [dDayText, setDDayText] = useState("");
   const [pendingCount, setPendingCount] = useState(0);
   const [studentAlert, setStudentAlert] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
   const [isStudent, setIsStudent] = useState(false);
+  const [ready, setReady] = useState(false); // ✅ 렌더 준비 상태
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.13)).current;
@@ -70,16 +72,18 @@ function LayoutContent() {
         setPendingCount((prev) => Math.max(prev - 1, 0));
       }
       if (student && studentName && order.studentName === studentName) {
-        console.log("🔔 학생 알림 발생!");
         setStudentAlert(true);
       }
     });
 
+    setReady(true); // ✅ 세그먼트 확인 후 준비 완료
     return () => {
       socket.off("newOrder");
       socket.off("orderUpdated");
     };
-  }, []);
+  }, [segments]);
+
+  if (!ready) return null; // ✅ 세그먼트 준비 전에는 렌더링 안함
 
   const openDrawer = () => {
     setDrawerOpen(true);

@@ -96,11 +96,13 @@ export default function ManageItemsScreen() {
   const handleSubmit = async () => {
     let imageUrl = image;
 
+    // Cloudinary 업로드가 필요한 경우
     if (image && image.startsWith("data:")) {
       imageUrl = await uploadToCloudinary(image);
       if (!imageUrl) return;
     }
 
+    // 이미지가 없을 경우 기본 이미지 사용
     if (!imageUrl) {
       imageUrl = DEFAULT_IMAGE_URL;
     }
@@ -111,28 +113,36 @@ export default function ManageItemsScreen() {
     const endpoint = editId ? `${SERVER_URL}/items/${editId}` : `${SERVER_URL}/items`;
 
     try {
-      await fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "요청 실패");
+      }
+
       showToast(editId ? "✅ 수정 완료" : "✅ 등록 완료");
       resetForm();
       fetchItems();
     } catch (err) {
       console.error("❌ 등록/수정 실패", err);
+      showToast("❌ 등록 또는 수정 실패");
     }
   };
+
 
   const handleDelete = async (id) => {
     const confirm = Platform.OS === "web"
       ? window.confirm("정말 삭제하시겠습니까?")
       : await new Promise((resolve) => {
-          Alert.alert("삭제 확인", "정말 삭제하시겠습니까?", [
-            { text: "취소", onPress: () => resolve(false) },
-            { text: "삭제", onPress: () => resolve(true) },
-          ]);
-        });
+        Alert.alert("삭제 확인", "정말 삭제하시겠습니까?", [
+          { text: "취소", onPress: () => resolve(false) },
+          { text: "삭제", onPress: () => resolve(true) },
+        ]);
+      });
 
     if (!confirm) return;
 
@@ -220,7 +230,7 @@ export default function ManageItemsScreen() {
                 style={styles.input}
               />
 
-              <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}> 
+              <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}>
                 <Text style={styles.toggle}>종류: {type === "drink" ? "음료" : "간식"} (터치 변경)</Text>
               </TouchableOpacity>
 

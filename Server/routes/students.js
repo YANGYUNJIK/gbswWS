@@ -34,14 +34,30 @@ router.delete("/:id", async (req, res) => {
 });
 
 // 학생 수정 (이름, category, grade, number 등)
+// router.put("/:id", async (req, res) => {
+//   try {
+//     const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//     res.json({ message: "학생 정보 수정 완료", student: updated });
+//   } catch (err) {
+//     res.status(500).json({ message: "학생 정보 수정 실패" });
+//   }
+// });
+// routes/students.js
+const mongoose = require("mongoose");
+
 router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "잘못된 ID 형식입니다" });
+  }
   try {
-    const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Student.findByIdAndUpdate(id, req.body, { new: true });
     res.json({ message: "학생 정보 수정 완료", student: updated });
   } catch (err) {
     res.status(500).json({ message: "학생 정보 수정 실패" });
   }
 });
+
 
 // 비밀번호 초기화
 router.patch("/:id/reset-password", async (req, res) => {

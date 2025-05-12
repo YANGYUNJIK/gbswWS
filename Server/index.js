@@ -26,9 +26,10 @@ app.use(express.json());
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   },
 });
+
 
 // ✅ io를 app에 저장하여 라우터에서도 접근 가능하게 설정
 app.set("io", io);
