@@ -116,7 +116,7 @@ export default function AdminOrdersScreen() {
         <View style={styles.centeredRow}>
           <TextInput
             style={styles.filterInput}
-            placeholder="검색어 입력"
+            placeholder="이름 입력"
             value={filterValue}
             onChangeText={setFilterValue}
           />
@@ -178,10 +178,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     width: "50%",
-    height: 50,
+    height: 40,
     backgroundColor: "#fff",
+    alignSelf: "center",
     marginBottom: 12,
   },
+  
   card: {
     width: 742,
     flexDirection: "row",
