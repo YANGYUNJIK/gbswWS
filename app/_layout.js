@@ -5,19 +5,20 @@ import {
   Alert,
   Animated,
   Dimensions,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { io } from "socket.io-client";
 import { StudentInfoContext, StudentInfoProvider } from "../context/StudentInfoContext";
 
-const SERVER_URL = Platform.OS === "web"
-  ? "http://localhost:3000"
-  : "https://gbswws.onrender.com";
+const SERVER_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gbswws.onrender.com";
+
 const socket = io(SERVER_URL);
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
@@ -194,13 +195,13 @@ function LayoutContent() {
         }}
       >
         {(isTeacher ? [
-          { label: "👩‍🏫 / 👨‍🏫 메인", route: "/teacher" },
+          { label: "👩‍🏫 메인", route: "/teacher" },
           { label: "📦 간식 관리", route: "/admin/manage" },
           { label: "📋 신청 관리", route: "/admin/orders" },
           { label: "📊 대시보드", route: "/admin/dashboard" },
           { label: "👥 사용자 관리", route: "/admin/users" },
         ] : isStudent ? [
-          { label: "👩‍🎓 / 👨‍🎓 메인", route: "/student" },
+          { label: "👩‍🎓 메인", route: "/student" },
           { label: "🥤 음료 신청", route: "/student/drink" },
           { label: "🍪 간식 신청", route: "/student/snack" },
           { label: "📄 신청 내역", route: "/student/orders" },

@@ -15,9 +15,11 @@ import {
 } from "react-native";
 import { io } from "socket.io-client";
 
-const SERVER_URL = Platform.OS === "web"
-  ? "http://localhost:3000"
-  : "https://gbswws.onrender.com";
+const SERVER_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gbswws.onrender.com";
+
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dfwaukxfs/upload";
 const UPLOAD_PRESET = "unsigned";

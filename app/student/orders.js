@@ -2,15 +2,16 @@
 import { useContext, useEffect, useState } from "react";
 import {
   FlatList, Image,
-  Platform,
   StyleSheet, Text, View
 } from "react-native";
 import { io } from "socket.io-client";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
-const SERVER_URL = Platform.OS === "web"
-  ? "http://localhost:3000"       // 로컬 개발 중이라면 이거!
-  : "https://gbswws.onrender.com";
+const SERVER_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gbswws.onrender.com";
+
 
 const socket = io(SERVER_URL);
 

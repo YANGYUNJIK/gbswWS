@@ -5,18 +5,19 @@ import {
   Alert,
   Image,
   ImageBackground,
-  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
-const SERVER_URL = Platform.OS === "web"
-  ? "http://localhost:3000"
-  : "https://gbswws.onrender.com";
+const SERVER_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gbswws.onrender.com";
+
 
 export default function MainScreen() {
   const router = useRouter();

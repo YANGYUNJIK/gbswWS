@@ -11,9 +11,11 @@ import {
   XAxis, YAxis
 } from "recharts";
 
-const SERVER_URL = Platform.OS === "web"
-  ? "http://localhost:3000"
-  : "https://gbswws.onrender.com";
+const SERVER_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gbswws.onrender.com";
+
 
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#a2d2ff", "#ffafcc"];
 

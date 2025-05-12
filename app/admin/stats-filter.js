@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Platform } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const SERVER_URL = "https://gbswws.onrender.com";
+const SERVER_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gbswws.onrender.com";
+
 
 export default function StatsFilterScreen() {
   const [orders, setOrders] = useState([]);
