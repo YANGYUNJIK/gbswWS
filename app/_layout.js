@@ -157,9 +157,6 @@ function LayoutContent() {
                   )}
                 </TouchableOpacity>
               )}
-              <TouchableOpacity onPress={handleAccount}>
-                <Text style={{ fontSize: 18 }}>👤</Text>
-              </TouchableOpacity>
             </View>
           ),
           headerStyle: {

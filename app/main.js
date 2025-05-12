@@ -78,8 +78,6 @@ export default function MainScreen() {
 
       <View style={styles.rightPane}>
         <Image source={imageSource} style={styles.inlineImage} />
-        <Text style={styles.title}>📚 간편 로그인</Text>
-
         <View style={styles.selector}>
           <TouchableOpacity
             style={[styles.roleBtn, role === "student" && styles.activeBtn]}
@@ -142,11 +140,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   inlineImage: {
-    width: 120,
-    height: 120,
+    width: 180,
+    height: 180,
     alignSelf: "center",
     resizeMode: "contain",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,

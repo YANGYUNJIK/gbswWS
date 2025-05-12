@@ -174,26 +174,29 @@ export default function ManageItemsScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardImageWrapper}>
-        <Image
-          source={{ uri: item.image || DEFAULT_IMAGE_URL }}
-          style={styles.cardImage}
-        />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>
-          {item.name} ({item.type === "drink" ? "음료" : "간식"})
-        </Text>
-        <Text style={[styles.cardStock, { color: item.stock ? "green" : "red" }]}>재고: {item.stock ? "있음" : "품절"}</Text>
-      </View>
-      <View style={styles.cardButtons}>
-        <TouchableOpacity onPress={() => handleEdit(item)} style={styles.editBtn}>
-          <Text>✏️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.deleteBtn}>
-          <Text>🗑️</Text>
-        </TouchableOpacity>
+
+    <View style={styles.cardWrapper}>
+      <View style={styles.card}>
+        <View style={styles.cardImageWrapper}>
+          <Image
+            source={{ uri: item.image || DEFAULT_IMAGE_URL }}
+            style={styles.cardImage}
+          />
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>
+            {item.name} ({item.type === "drink" ? "음료" : "간식"})
+          </Text>
+          <Text style={[styles.cardStock, { color: item.stock ? "green" : "red" }]}>재고: {item.stock ? "있음" : "품절"}</Text>
+        </View>
+        <View style={styles.cardButtons}>
+          <TouchableOpacity onPress={() => handleEdit(item)} style={styles.editBtn}>
+            <Text>✏️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.deleteBtn}>
+            <Text>🗑️</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -203,9 +206,11 @@ export default function ManageItemsScreen() {
       <View style={{ flex: 1, padding: 20 }}>
         <Text style={styles.header}>📦 항목 등록 / 수정</Text>
 
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.button}>
-          <Text style={{ color: "white", fontSize: 16 }}>+ 항목 추가</Text>
-        </TouchableOpacity>
+        <View style={styles.cardWrapper}>
+          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.button}>
+            <Text style={{ color: "white", fontSize: 16 }}>+ 항목 추가</Text>
+          </TouchableOpacity>
+        </View>
 
         {items.length === 0 ? (
           <Text style={{ marginTop: 20, textAlign: "center", color: "gray" }}>
@@ -283,11 +288,17 @@ const styles = StyleSheet.create({
     width: 120, height: 120, borderRadius: 10, resizeMode: "cover",
   },
   button: {
+    width: 742,
     backgroundColor: "#5DBB9D", paddingVertical: 14, borderRadius: 10,
     alignItems: "center", marginTop: 10, shadowColor: "#000",
     shadowOpacity: 0.1, shadowRadius: 6, elevation: 3,
   },
+  cardWrapper: {
+    width: "100%",
+    alignItems: "center",
+  },
   card: {
+    width: 742,
     flexDirection: "row", alignItems: "center", padding: 12,
     borderWidth: 1, borderColor: "#ddd", borderRadius: 12,
     marginVertical: 6, backgroundColor: "#fff",
