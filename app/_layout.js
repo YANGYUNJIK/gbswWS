@@ -42,7 +42,7 @@ function LayoutContent() {
     const today = new Date();
     const timeDiff = targetDate.getTime() - today.getTime();
     const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-    setDDayText(` 2025 전국기능경기대회 D-${dayDiff}`);
+    setDDayText(`2025 전국기능경기대회 D-${dayDiff}`);
   }, []);
 
   useEffect(() => {
@@ -133,7 +133,7 @@ function LayoutContent() {
           headerLeft: () =>
             (isTeacher || isStudent) ? (
               <TouchableOpacity onPress={openDrawer}>
-                <Text style={{ fontSize: 20, marginLeft: 10 }}>☰</Text>
+                <Text style={{ fontSize: 30, marginLeft: 10 }}> ☰  </Text>
               </TouchableOpacity>
             ) : null,
           headerTitle: () => (
@@ -196,19 +196,23 @@ function LayoutContent() {
           paddingHorizontal: 16,
           zIndex: 999,
           transform: [{ translateX: drawerAnim }],
+          
         }}
       >
         {(isTeacher ? [
-          { label: "👩‍🏫 메인", route: "/teacher" },
+          { label: "🏠 메인", route: "/teacher" },
           { label: "📦 간식 관리", route: "/admin/manage" },
           { label: "📋 신청 관리", route: "/admin/orders" },
           { label: "📊 대시보드", route: "/admin/dashboard" },
           { label: "👥 사용자 관리", route: "/admin/users" },
+          { label: "🚪 로그아웃", route: "/main" },
+          
         ] : isStudent ? [
-          { label: "👩‍🎓 메인", route: "/student" },
+          { label: "🏠 메인", route: "/student" },
           { label: "🥤 음료 신청", route: "/student/drink" },
           { label: "🍪 간식 신청", route: "/student/snack" },
           { label: "📄 신청 내역", route: "/student/orders" },
+          { label: "🚪 로그아웃", route: "/main" },
         ] : []).map(({ label, route }) => (
           <TouchableOpacity
             key={label}

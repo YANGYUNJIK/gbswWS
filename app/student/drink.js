@@ -40,6 +40,10 @@ export default function DrinkScreen() {
     fetchItems();
   }, []);
 
+  useEffect(() => {
+    console.log("음료 이미지들:", items.map(i => i?.image));
+  }, [items]);
+
   const handleSelect = (item) => {
     setSelectedItem(item);
     setQuantity(1);
