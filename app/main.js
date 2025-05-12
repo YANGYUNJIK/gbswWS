@@ -72,7 +72,7 @@ export default function MainScreen() {
         <ImageBackground
           source={require("../assets/test1.jpg")}
           style={styles.fullImage}
-          imageStyle={{ opacity: 0.2 }}
+          imageStyle={{ opacity: 0.6 }}
         />
       </View>
 
