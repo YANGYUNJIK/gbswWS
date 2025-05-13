@@ -1,4 +1,3 @@
-// StudentMenu.js
 import { useRouter } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
 import {
@@ -10,50 +9,85 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
+// ✅ 화면 너비 기준으로 아이템 크기 설정
 const screenWidth = Dimensions.get("window").width;
 const ITEM_WIDTH = screenWidth * 0.22;
 const ITEM_SPACING = 12;
-const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 100;
+const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 97;
 
-const bannerData = [
+// ✅ 원본 데이터 (진짜 보여줄 4개)
+const rawBannerData = [
   { image: require("../assets/test1.jpg"), route: "/student/drink", label: "🥤 음료 신청" },
   { image: require("../assets/test1.jpg"), route: "/student/snack", label: "🍪 간식 신청" },
   { image: require("../assets/test1.jpg"), route: "/student/orders", label: "📄 신청 내역" },
   { image: require("../assets/test1.jpg"), route: "/banner/4", label: "🛍️ 기타 기능 준비 중" },
 ];
 
+// ✅ 무한 루프 구현을 위한 가짜 데이터 포함
+const bannerData = [
+  ...rawBannerData.slice(-2), // 마지막 2개 → 앞에 복제
+  ...rawBannerData,           // 실제 데이터
+  ...rawBannerData.slice(0, 2), // 처음 2개 → 뒤에 복제
+];
+
 export default function StudentMenu() {
   const router = useRouter();
   const { studentName } = useContext(StudentInfoContext);
   const flatListRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // ✅ 자동 슬라이드
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const nextIndex = (currentIndex + 1) % bannerData.length;
-      scrollToIndex(nextIndex);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [currentIndex]);
+  // ✅ 무한 슬라이드 핵심: 실제 시작은 index 2 (원본의 첫 항목)
+  const [currentIndex, setCurrentIndex] = useState(2);
 
+  // ✅ 슬라이드 이동 함수
   const scrollToIndex = (index) => {
     flatListRef.current?.scrollToIndex({ index, animated: true });
     setCurrentIndex(index);
   };
 
+  // ✅ 자동 슬라이드
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const nextIndex = currentIndex + 1;
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      setCurrentIndex(nextIndex);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
+  // ✅ 무한 루프처럼 보이게: 맨 끝에 도달하면 순간적으로 2번 인덱스로 점프
+  const handleMomentumScrollEnd = () => {
+    if (currentIndex === bannerData.length - 2) {
+      flatListRef.current?.scrollToIndex({ index: 2, animated: false });
+      setCurrentIndex(2);
+    } else if (currentIndex === 1) {
+      flatListRef.current?.scrollToIndex({ index: rawBannerData.length + 1, animated: false });
+      setCurrentIndex(rawBannerData.length + 1);
+    }
+  };
+
+  // ✅ 버튼 이전/다음
   const handlePrev = () => {
-    const prevIndex = currentIndex === 0 ? bannerData.length - 1 : currentIndex - 1;
-    scrollToIndex(prevIndex);
+    if (currentIndex <= 1) {
+      // 맨 앞에 도달했으면 맨 끝으로 순간 이동 (애니메이션 없이)
+      flatListRef.current?.scrollToIndex({ index: rawBannerData.length + 1, animated: false });
+      setCurrentIndex(rawBannerData.length + 1);
+    } else {
+      // 일반 이동
+      scrollToIndex(currentIndex - 1);
+    }
   };
 
   const handleNext = () => {
-    const nextIndex = (currentIndex + 1) % bannerData.length;
-    scrollToIndex(nextIndex);
+    if (currentIndex >= bannerData.length - 2) {
+      flatListRef.current?.scrollToIndex({ index: 2, animated: false });
+      setCurrentIndex(2);
+    } else {
+      scrollToIndex(currentIndex + 1);
+    }
   };
 
   return (
@@ -70,6 +104,13 @@ export default function StudentMenu() {
           showsHorizontalScrollIndicator={false}
           scrollEnabled={false}
           keyExtractor={(_, index) => index.toString()}
+          initialScrollIndex={2} // ✅ 시작은 2번 (원본 첫 항목)
+          getItemLayout={(data, index) => ({
+            length: ITEM_WIDTH + ITEM_SPACING,
+            offset: (ITEM_WIDTH + ITEM_SPACING) * index,
+            index,
+          })}
+          onMomentumScrollEnd={handleMomentumScrollEnd}
           contentContainerStyle={{ gap: ITEM_SPACING }}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => router.push(item.route)}>
@@ -83,7 +124,6 @@ export default function StudentMenu() {
             </TouchableOpacity>
           )}
         />
-
         <TouchableOpacity onPress={handleNext} style={styles.arrow}>
           <Image
             source={require("../assets/arrow-left.png")}
@@ -91,10 +131,11 @@ export default function StudentMenu() {
           />
         </TouchableOpacity>
       </View>
+      {/* ✅ 인디케이터: 실제 원본 데이터 기준 (0~3) */}
       <View style={styles.indicatorContainer}>
-        {bannerData.map((_, i) => (
-          <Pressable key={i} onPress={() => scrollToIndex(i)}>
-            <View style={[styles.dot, i === currentIndex && styles.activeDot]} />
+        {rawBannerData.map((_, i) => (
+          <Pressable key={i} onPress={() => scrollToIndex(i + 2)}>
+            <View style={[styles.dot, (currentIndex - 2 + rawBannerData.length) % rawBannerData.length === i && styles.activeDot]} />
           </Pressable>
         ))}
       </View>
@@ -112,6 +153,7 @@ const styles = StyleSheet.create({
   sliderContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 10,
   },
   arrow: {
@@ -123,6 +165,14 @@ const styles = StyleSheet.create({
     height: 24,
     tintColor: "#555",
   },
+  banner: {
+    width: ITEM_WIDTH,
+    height: 140, // ✅ 세로 크기 증가
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+    paddingBottom: 8,
+    paddingRight: 8,
+  },
   label: {
     backgroundColor: "rgba(0,0,0,0.5)",
     color: "white",
@@ -131,28 +181,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-  },
-  indicatorContainer: {
-    flexDirection: "row",
-    marginTop: 6,
-    marginLeft: 8,
-    position: "absolute",
-    bottom: -20,
-    left: 0,
-  },
-  sliderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  banner: {
-    width: ITEM_WIDTH,
-    height: 100,
-    justifyContent: "flex-end",
-    alignItems: "flex-end",
-    paddingBottom: 8,
-    paddingRight: 8,
   },
   indicatorContainer: {
     flexDirection: "row",
@@ -170,5 +198,4 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: "#5DBB9D",
   },
-
 });
