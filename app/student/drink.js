@@ -44,6 +44,12 @@ export default function DrinkScreen() {
     console.log("음료 이미지들:", items.map(i => i?.image));
   }, [items]);
 
+
+  const isWeekend = () => {
+    const today = new Date().getDay(); // 0: 일요일, 6: 토요일
+    return today === 0 || today === 6;
+  };
+
   const handleSelect = (item) => {
     setSelectedItem(item);
     setQuantity(1);

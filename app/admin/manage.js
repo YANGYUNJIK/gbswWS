@@ -1,4 +1,3 @@
-// ✅ 개선된 ManageItemsScreen.js (추가 버튼도 필터에 통합)
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
@@ -23,9 +22,15 @@ const SERVER_URL =
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dfwaukxfs/upload";
 const UPLOAD_PRESET = "unsigned";
-const DEFAULT_IMAGE_URL = "https://res.cloudinary.com/dfwaukxfs/image/upload/v1746598811/artxp8kgy5zhdmgfospd.webp";
+const DEFAULT_IMAGE_URL =
+  "https://res.cloudinary.com/dfwaukxfs/image/upload/v1746598811/artxp8kgy5zhdmgfospd.webp";
 
 const socket = io(SERVER_URL);
+
+const isWeekend = () => {
+  const today = new Date().getDay(); // 0: 일요일, 6: 토요일
+  return today === 0 || today === 6;
+};
 
 export default function ManageItemsScreen() {
   const [items, setItems] = useState([]);
@@ -107,9 +112,17 @@ export default function ManageItemsScreen() {
     }
     if (!imageUrl) imageUrl = DEFAULT_IMAGE_URL;
 
-    const payload = { name, type, image: imageUrl, stock };
+    const payload = {
+      name,
+      type,
+      image: imageUrl,
+      stock: stock,
+    };
+
     const method = editId ? "PUT" : "POST";
-    const endpoint = editId ? `${SERVER_URL}/items/${editId}` : `${SERVER_URL}/items`;
+    const endpoint = editId
+      ? `${SERVER_URL}/items/${editId}`
+      : `${SERVER_URL}/items`;
 
     try {
       const res = await fetch(endpoint, {
@@ -180,17 +193,43 @@ export default function ManageItemsScreen() {
     <View style={styles.cardWrapper}>
       <View style={styles.card}>
         <View style={styles.cardImageWrapper}>
-          <Image source={{ uri: item.image || DEFAULT_IMAGE_URL }} style={styles.cardImage} />
+          <Image
+            source={{ uri: item.image || DEFAULT_IMAGE_URL }}
+            style={styles.cardImage}
+          />
         </View>
         <View style={styles.cardContent}>
           <Text style={styles.cardTitle}>
-            {item.name} ({item.type === "drink" ? "음료" : "간식"})
+            {item.name} (
+            {item.type === "drink"
+              ? "음료"
+              : item.type === "snack"
+                ? "간식"
+                : "라면"}
+            )
           </Text>
-          <Text style={[styles.cardStock, { color: item.stock ? "green" : "red" }]}>재고: {item.stock ? "있음" : "품절"}</Text>
+          <Text
+            style={[
+              styles.cardStock,
+              { color: item.stock ? "green" : "red" },
+            ]}
+          >
+            재고: {item.stock ? "있음" : "품절"}
+          </Text>
         </View>
         <View style={styles.cardButtons}>
-          <TouchableOpacity onPress={() => handleEdit(item)} style={styles.editBtn}><Text>✏️</Text></TouchableOpacity>
-          <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.deleteBtn}><Text>🗑️</Text></TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleEdit(item)}
+            style={styles.editBtn}
+          >
+            <Text>✏️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleDelete(item._id)}
+            style={styles.deleteBtn}
+          >
+            <Text>🗑️</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -203,19 +242,25 @@ export default function ManageItemsScreen() {
           {["전체", "종류", "재고", "이름", "추가"].map((label) => (
             <TouchableOpacity
               key={label}
-              style={[styles.filterButton, selectedFilter === label && styles.filterButtonActive,
-              label === "추가" && styles.addFilterButton,]}
+              style={[
+                styles.filterButton,
+                selectedFilter === label && styles.filterButtonActive,
+                label === "추가" && styles.addFilterButton,
+              ]}
               onPress={() => {
                 if (label === "추가") {
                   setModalVisible(true);
                 } else {
                   setSelectedFilter(label);
                 }
-              }}>
+              }}
+            >
               <Text
                 style={[
-                  selectedFilter === label ? styles.filterTextActive : styles.filterText,
-                  label === "추가" && styles.addFilterText, // ✅ 텍스트 색상도 별도
+                  selectedFilter === label
+                    ? styles.filterTextActive
+                    : styles.filterText,
+                  label === "추가" && styles.addFilterText,
                 ]}
               >
                 {label}
@@ -227,9 +272,22 @@ export default function ManageItemsScreen() {
 
       {selectedFilter === "종류" && (
         <View style={styles.selectorRow}>
-          {["drink", "snack"].map((val) => (
-            <TouchableOpacity key={val} onPress={() => setFilterTypeValue(val)} style={[styles.selectorBtn, filterTypeValue === val && styles.selectorBtnActive]}>
-              <Text style={{ color: filterTypeValue === val ? "white" : "#333" }}>{val === "drink" ? "음료" : "간식"}</Text>
+          {["drink", "snack", "ramen"].map((val) => (
+            <TouchableOpacity
+              key={val}
+              onPress={() => setFilterTypeValue(val)}
+              style={[
+                styles.selectorBtn,
+                filterTypeValue === val && styles.selectorBtnActive,
+              ]}
+            >
+              <Text style={{ color: filterTypeValue === val ? "white" : "#333" }}>
+                {val === "drink"
+                  ? "음료"
+                  : val === "snack"
+                    ? "간식"
+                    : "라면"}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -238,8 +296,17 @@ export default function ManageItemsScreen() {
       {selectedFilter === "재고" && (
         <View style={styles.selectorRow}>
           {[true, false].map((val) => (
-            <TouchableOpacity key={val.toString()} onPress={() => setFilterStockValue(val)} style={[styles.selectorBtn, filterStockValue === val && styles.selectorBtnActive]}>
-              <Text style={{ color: filterStockValue === val ? "white" : "#333" }}>{val ? "재고 있음" : "품절"}</Text>
+            <TouchableOpacity
+              key={val.toString()}
+              onPress={() => setFilterStockValue(val)}
+              style={[
+                styles.selectorBtn,
+                filterStockValue === val && styles.selectorBtnActive,
+              ]}
+            >
+              <Text style={{ color: filterStockValue === val ? "white" : "#333" }}>
+                {val ? "재고 있음" : "품절"}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -273,9 +340,26 @@ export default function ManageItemsScreen() {
               style={styles.input}
             />
 
-            <TouchableOpacity onPress={() => setType(type === "drink" ? "snack" : "drink")}>
-              <Text style={styles.toggle}>종류: {type === "drink" ? "음료" : "간식"} (터치 변경)</Text>
-            </TouchableOpacity>
+            <View style={styles.selectorRow}>
+              {["drink", "snack", "ramen"].map((val) => (
+                <TouchableOpacity
+                  key={val}
+                  onPress={() => setType(val)}
+                  style={[
+                    styles.selectorBtn,
+                    type === val && styles.selectorBtnActive,
+                  ]}
+                >
+                  <Text style={{ color: type === val ? "white" : "#333" }}>
+                    {val === "drink"
+                      ? "음료"
+                      : val === "snack"
+                        ? "간식"
+                        : "라면"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <TouchableOpacity onPress={pickImage} style={styles.imagePick}>
               <Text>📷 이미지 선택</Text>
@@ -287,20 +371,32 @@ export default function ManageItemsScreen() {
               </View>
             )}
 
-            <TouchableOpacity onPress={() => setStock(!stock)} style={styles.toggle}>
-              <Text style={styles.toggle}>재고: {stock ? "있음" : "품절"} (터치 변경)</Text>
+            {/* ✅ 재고 텍스트 정확히 가운데 정렬 */}
+            <TouchableOpacity
+              onPress={() => setStock(!stock)}
+              style={styles.stockButton}
+            >
+              <Text style={styles.stockText}>
+                재고: {stock ? "있음" : "품절"} (터치 변경)
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-              <Text style={{ color: "white", fontSize: 16 }}>{editId ? "수정하기" : "등록하기"}</Text>
+              <Text style={{ color: "white", fontSize: 16 }}>
+                {editId ? "수정하기" : "등록하기"}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={resetForm} style={{ marginTop: 15, alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={resetForm}
+              style={{ marginTop: 15, alignItems: "center" }}
+            >
               <Text style={{ color: "gray" }}>닫기</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
     </View>
   );
 }
@@ -309,41 +405,99 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f0f4f8", padding: 10 },
   filterContainer: { justifyContent: "center", alignItems: "center", marginBottom: 12 },
   filterGroup: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  // filterButton: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, backgroundColor: "#ddd" },
-  // filterButtonActive: { backgroundColor: "#5DBB9D" },
-  // filterText: { color: "#333", fontWeight: "bold", fontSize: 13 },
   filterButton: {
-    paddingVertical: 10,     // 기존보다 더 높게
-    paddingHorizontal: 20,   // 너비도 조금 넓게
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 20,
     backgroundColor: "#ddd",
   },
   filterText: {
-    fontSize: 15,            // 텍스트 크기도 맞춤
+    fontSize: 15,
     fontWeight: "bold",
     color: "#333",
   },
-
   filterTextActive: { color: "white", fontWeight: "bold", fontSize: 13 },
-  selectorRow: { flexDirection: "row", justifyContent: "center", gap: 10, marginBottom: 10 },
-  selectorBtn: { paddingVertical: 6, paddingHorizontal: 16, borderRadius: 20, backgroundColor: "#eee" },
+  selectorRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+    marginBottom: 10,
+    flexWrap: "wrap",
+    alignItems: "center",
+  },
+  selectorBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "#eee",
+  },
   selectorBtnActive: { backgroundColor: "#5DBB9D" },
-  searchInput: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, paddingHorizontal: 10, width: "50%", height: 40, backgroundColor: "#fff", alignSelf: "center" },
-  input: { borderWidth: 1, borderColor: "#bbb", borderRadius: 10, padding: 12, marginVertical: 10, fontSize: 16, backgroundColor: "#fff" },
-  toggle: { marginVertical: 8, fontSize: 16, color: "#555", },
-  imagePick: { borderWidth: 1, borderColor: "#aaa", padding: 10, borderRadius: 8, alignItems: "center", backgroundColor: "#f7f7f7", marginTop: 10 },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    width: "50%",
+    height: 40,
+    backgroundColor: "#fff",
+    alignSelf: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#bbb",
+    borderRadius: 10,
+    padding: 12,
+    marginVertical: 10,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  toggle: { marginVertical: 8, fontSize: 16, color: "#555", textAlign: "center" },
+  imagePick: {
+    borderWidth: 1,
+    borderColor: "#aaa",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
+    marginTop: 10,
+  },
   previewImage: {
     width: 120,
     height: 120,
     borderRadius: 10,
     resizeMode: "cover",
-    alignSelf: "center",        // 🔧 세로 중앙 정렬
+    alignSelf: "center",
     marginTop: 10,
-    marginBottom: 8             // 🔧 버튼과의 간격을 줄이기 위해 추가
-  }, button: { width: "100%", backgroundColor: "#5DBB9D", paddingVertical: 14, borderRadius: 10, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
+    marginBottom: 8,
+  },
+  button: {
+    width: "100%",
+    backgroundColor: "#5DBB9D",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   cardWrapper: { width: "100%", alignItems: "center" },
-  card: { width: 742, flexDirection: "row", alignItems: "center", padding: 12, borderWidth: 1, borderColor: "#ddd", borderRadius: 12, marginVertical: 6, backgroundColor: "#fff", shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
-  cardImageWrapper: { justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  card: {
+    width: 742,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    marginVertical: 6,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardImageWrapper: { justifyContent: "center", alignItems: "center", marginRight: 12 },
   cardImage: { width: 70, height: 70, borderRadius: 8, backgroundColor: "#eee" },
   cardContent: { flex: 1, justifyContent: "center" },
   cardTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
@@ -351,28 +505,43 @@ const styles = StyleSheet.create({
   cardButtons: { flexDirection: "row", gap: 8 },
   editBtn: { padding: 6, backgroundColor: "#e3f2fd", borderRadius: 6 },
   deleteBtn: { padding: 6, backgroundColor: "#ffebee", borderRadius: 6 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
-  modalCard: { width: 320, backgroundColor: "#fff", borderRadius: 12, padding: 20, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 10, elevation: 5 },
-  // addFilterButton: {
-  //   backgroundColor: "#ffa94d", // 예: 주황색
-  // },
-  // // addFilterText: {
-  //   color: "white",
-  //   fontWeight: "bold",
-  // },
-  filterButtonActive: {
-    backgroundColor: "#5DBB9D",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
   },
+  modalCard: {
+    width: 320,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  filterButtonActive: { backgroundColor: "#5DBB9D" },
   addFilterButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
     backgroundColor: "#ffa94d",
     borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
   addFilterText: {
     fontSize: 15,
     fontWeight: "bold",
     color: "white",
+  }, stockButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    marginVertical: 10,
+  },
+  stockText: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#555",
   },
 
 });

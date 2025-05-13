@@ -1,8 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import {
   Dimensions,
-  FlatList, Image, Modal,
-  StyleSheet, Text, TouchableOpacity, View
+  FlatList,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
@@ -10,7 +15,6 @@ const SERVER_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://gbswws.onrender.com";
-
 
 const screenWidth = Dimensions.get("window").width;
 const CARD_GAP = 60;
@@ -23,14 +27,23 @@ export default function SnackScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
+  const isWeekend = () => {
+    const today = new Date().getDay(); // 0: 일요일, 6: 토요일
+    return today === 0 || today === 6;
+  };
+
   const fetchItems = async () => {
     try {
       const res = await fetch(`${SERVER_URL}/items`);
       const data = await res.json();
-      const snacks = data.filter((item) => item.type === "snack");
+
+      // ✅ 간식 + 라면 포함
+      const snacks = data.filter(
+        (item) => item.type === "snack" || item.type === "ramen"
+      );
       setItems(snacks);
     } catch (err) {
-      console.error("❌ 음료 목록 불러오기 실패", err);
+      console.error("❌ 간식 목록 불러오기 실패", err);
     }
   };
 
@@ -87,7 +100,9 @@ export default function SnackScreen() {
   const renderItem = ({ item }) => {
     if (!item) return <View style={styles.cardPlaceholder} />;
 
-    const isSoldOut = item.stock === false;
+    const isRamen = item.type === "ramen";
+    const isRamenBlocked = isRamen && !isWeekend(); // 평일에는 라면 차단
+    const isSoldOut = item.stock === false || isRamenBlocked;
 
     return (
       <TouchableOpacity
@@ -97,10 +112,11 @@ export default function SnackScreen() {
       >
         <View style={{ position: "relative" }}>
           <Image source={{ uri: item.image }} style={styles.image} />
-
           {isSoldOut && (
             <View style={styles.soldOutBadge}>
-              <Text style={styles.soldOutText}>품절</Text>
+              <Text style={styles.soldOutText}>
+                {isRamenBlocked ? "주말 전용" : "품절"}
+              </Text>
             </View>
           )}
         </View>
@@ -117,25 +133,34 @@ export default function SnackScreen() {
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         numColumns={4}
-        columnWrapperStyle={{ paddingHorizontal: CARD_GAP, justifyContent: "space-between" }}
+        columnWrapperStyle={{
+          paddingHorizontal: CARD_GAP,
+          justifyContent: "space-between",
+        }}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
 
       <Modal visible={modalVisible} animationType="fade" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>
-              {selectedItem?.name}
-            </Text>
+            <Text style={styles.modalTitle}>{selectedItem?.name}</Text>
 
             <View style={styles.quantityControl}>
-              <TouchableOpacity onPress={() => setQuantity((prev) => Math.max(1, prev - 1))}>
+              <TouchableOpacity
+                onPress={() =>
+                  setQuantity((prev) => Math.max(1, prev - 1))
+                }
+              >
                 <Text style={styles.arrow}>{"<"}</Text>
               </TouchableOpacity>
 
               <Text style={styles.quantityText}>{quantity}개</Text>
 
-              <TouchableOpacity onPress={() => setQuantity((prev) => Math.min(10, prev + 1))}>
+              <TouchableOpacity
+                onPress={() =>
+                  setQuantity((prev) => Math.min(10, prev + 1))
+                }
+              >
                 <Text style={styles.arrow}>{">"}</Text>
               </TouchableOpacity>
             </View>
@@ -144,7 +169,10 @@ export default function SnackScreen() {
               <Text style={styles.buttonText}>신청하기</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 10 }}>
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={{ marginTop: 10 }}
+            >
               <Text style={{ color: "gray" }}>닫기</Text>
             </TouchableOpacity>
           </View>
@@ -160,7 +188,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f4f8",
     padding: 10,
   },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 20, marginTop: 10 },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+    marginTop: 10,
+  },
   card: {
     width: CARD_WIDTH,
     marginBottom: 35,
@@ -172,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     elevation: 2,
     minHeight: 150,
-    justifyContent: "center"
+    justifyContent: "center",
   },
   cardPlaceholder: {
     width: CARD_WIDTH,
