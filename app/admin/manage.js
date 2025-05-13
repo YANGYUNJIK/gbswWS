@@ -237,6 +237,9 @@ export default function ManageItemsScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.header}>
+        음료/간식 관리
+      </Text>
       <View style={styles.filterContainer}>
         <View style={styles.filterGroup}>
           {["전체", "종류", "재고", "이름", "추가"].map((label) => (
@@ -544,4 +547,7 @@ const styles = StyleSheet.create({
     color: "#555",
   },
 
+  header: {
+    fontSize: 22, fontWeight: "bold", marginTop: 30, marginBottom: 30, textAlign: "center", color: "#333",
+  },
 });

@@ -1,8 +1,14 @@
 import { useContext, useEffect, useState } from "react";
 import {
   Dimensions,
-  FlatList, Image, Modal,
-  StyleSheet, Text, TouchableOpacity, View
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
@@ -21,13 +27,12 @@ export default function DrinkScreen() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [hoveredIndex, setHoveredIndex] = useState(null); // ✅ hover 상태
 
   const fetchItems = async () => {
     try {
       const res = await fetch(`${SERVER_URL}/items`);
-      if (!res.ok) {
-        throw new Error(`서버 응답 오류: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
       const data = await res.json();
       const drinks = data.filter((item) => item.type === "drink");
       setItems(drinks);
@@ -40,16 +45,6 @@ export default function DrinkScreen() {
     fetchItems();
   }, []);
 
-  useEffect(() => {
-    console.log("음료 이미지들:", items.map(i => i?.image));
-  }, [items]);
-
-
-  const isWeekend = () => {
-    const today = new Date().getDay(); // 0: 일요일, 6: 토요일
-    return today === 0 || today === 6;
-  };
-
   const handleSelect = (item) => {
     setSelectedItem(item);
     setQuantity(1);
@@ -58,7 +53,6 @@ export default function DrinkScreen() {
 
   const handleSubmit = async () => {
     if (!studentName || !category) {
-      console.warn("❗ 학생 이름 또는 카테고리 누락됨:", studentName, category);
       alert("학생 이름 또는 카테고리가 설정되지 않았습니다.");
       return;
     }
@@ -80,11 +74,8 @@ export default function DrinkScreen() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || "신청 실패");
-      }
+      if (!res.ok) throw new Error(data.message || "신청 실패");
 
-      console.log("✅ 신청 저장 결과:", data);
       alert("✅ 신청 완료!");
       setModalVisible(false);
     } catch (err) {
@@ -97,24 +88,31 @@ export default function DrinkScreen() {
   const remainder = items.length % 4;
   if (remainder !== 0) {
     const emptySlots = 4 - remainder;
-    for (let i = 0; i < emptySlots; i++) {
-      filledItems.push(null);
-    }
+    for (let i = 0; i < emptySlots; i++) filledItems.push(null);
   }
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     if (!item) return <View style={styles.cardPlaceholder} />;
 
     const isSoldOut = item.stock === false;
+    const isHovered = hoveredIndex === index;
 
     return (
-      <TouchableOpacity
+      <Pressable
         onPress={() => !isSoldOut && handleSelect(item)}
+        onHoverIn={() => setHoveredIndex(index)}
+        onHoverOut={() => setHoveredIndex(null)}
         style={[styles.card, isSoldOut && { opacity: 0.4 }]}
         disabled={isSoldOut}
       >
         <View style={{ position: "relative" }}>
-          <Image source={{ uri: item.image }} style={styles.image} />
+          <Image
+            source={{ uri: item.image }}
+            style={[
+              styles.image,
+              isHovered && styles.imageHovered
+            ]}
+          />
           {isSoldOut && (
             <View style={styles.soldOutBadge}>
               <Text style={styles.soldOutText}>품절</Text>
@@ -122,13 +120,13 @@ export default function DrinkScreen() {
           )}
         </View>
         <Text style={styles.name}>{item.name}</Text>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>• 음료 신청</Text>
+      <Text style={styles.title}>• 음료 코너</Text>
       <FlatList
         data={filledItems}
         keyExtractor={(_, index) => index.toString()}
@@ -172,7 +170,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f4f8",
     padding: 10,
   },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 20, marginTop: 10 },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+    marginTop: 10,
+  },
   card: {
     width: CARD_WIDTH,
     marginBottom: 35,
@@ -184,14 +187,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     elevation: 2,
     minHeight: 150,
-    justifyContent: "center"
+    justifyContent: "center",
   },
   cardPlaceholder: {
     width: CARD_WIDTH,
     marginBottom: 20,
   },
-  image: { width: 100, height: 100, marginBottom: 8 },
-  name: { textAlign: "center" },
+  image: {
+    width: 100,
+    height: 100,
+    marginBottom: 8,
+    transition: "transform 0.2s ease-in-out", // ✅ 웹 호환용 트랜지션
+  },
+  imageHovered: {
+    transform: [{ scale: 1.1 }], // ✅ 확대 효과
+  },
+  name: {
+    textAlign: "center",
+  },
   soldOutBadge: {
     position: "absolute",
     top: 4,

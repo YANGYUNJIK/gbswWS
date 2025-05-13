@@ -105,6 +105,7 @@ export default function MainScreen() {
           secureTextEntry
           value={password}
           onChangeText={setPassword}
+          onSubmitEditing={handleLogin}
         />
 
         <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>

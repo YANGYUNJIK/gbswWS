@@ -4,10 +4,11 @@ import {
   FlatList,
   Image,
   Modal,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
 
@@ -26,24 +27,17 @@ export default function SnackScreen() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
-
-  const isWeekend = () => {
-    const today = new Date().getDay(); // 0: 일요일, 6: 토요일
-    return today === 0 || today === 6;
-  };
+  const [hoveredIndex, setHoveredIndex] = useState(null); // ✅ hover 상태
 
   const fetchItems = async () => {
     try {
       const res = await fetch(`${SERVER_URL}/items`);
+      if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
       const data = await res.json();
-
-      // ✅ 간식 + 라면 포함
-      const snacks = data.filter(
-        (item) => item.type === "snack" || item.type === "ramen"
-      );
+      const snacks = data.filter((item) => item.type === "snack");
       setItems(snacks);
     } catch (err) {
-      console.error("❌ 간식 목록 불러오기 실패", err);
+      console.error("❌ 간식 목록 불러오기 실패:", err);
     }
   };
 
@@ -79,12 +73,14 @@ export default function SnackScreen() {
       });
 
       const data = await res.json();
-      console.log("✅ 신청 저장 결과:", data);
+
+      if (!res.ok) throw new Error(data.message || "신청 실패");
 
       alert("✅ 신청 완료!");
       setModalVisible(false);
     } catch (err) {
-      console.error("❌ 신청 실패", err);
+      console.error("❌ 신청 실패:", err);
+      alert("신청 중 오류가 발생했습니다.");
     }
   };
 
@@ -92,51 +88,51 @@ export default function SnackScreen() {
   const remainder = items.length % 4;
   if (remainder !== 0) {
     const emptySlots = 4 - remainder;
-    for (let i = 0; i < emptySlots; i++) {
-      filledItems.push(null);
-    }
+    for (let i = 0; i < emptySlots; i++) filledItems.push(null);
   }
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     if (!item) return <View style={styles.cardPlaceholder} />;
 
-    const isRamen = item.type === "ramen";
-    const isRamenBlocked = isRamen && !isWeekend(); // 평일에는 라면 차단
-    const isSoldOut = item.stock === false || isRamenBlocked;
+    const isSoldOut = item.stock === false;
+    const isHovered = hoveredIndex === index;
 
     return (
-      <TouchableOpacity
+      <Pressable
         onPress={() => !isSoldOut && handleSelect(item)}
+        onHoverIn={() => setHoveredIndex(index)}
+        onHoverOut={() => setHoveredIndex(null)}
         style={[styles.card, isSoldOut && { opacity: 0.4 }]}
         disabled={isSoldOut}
       >
         <View style={{ position: "relative" }}>
-          <Image source={{ uri: item.image }} style={styles.image} />
+          <Image
+            source={{ uri: item.image }}
+            style={[
+              styles.image,
+              isHovered && styles.imageHovered
+            ]}
+          />
           {isSoldOut && (
             <View style={styles.soldOutBadge}>
-              <Text style={styles.soldOutText}>
-                {isRamenBlocked ? "주말 전용" : "품절"}
-              </Text>
+              <Text style={styles.soldOutText}>품절</Text>
             </View>
           )}
         </View>
         <Text style={styles.name}>{item.name}</Text>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>• 간식 신청</Text>
+      <Text style={styles.title}>• 간식 코너</Text>
       <FlatList
         data={filledItems}
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         numColumns={4}
-        columnWrapperStyle={{
-          paddingHorizontal: CARD_GAP,
-          justifyContent: "space-between",
-        }}
+        columnWrapperStyle={{ paddingHorizontal: CARD_GAP, justifyContent: "space-between" }}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
 
@@ -144,23 +140,12 @@ export default function SnackScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>{selectedItem?.name}</Text>
-
             <View style={styles.quantityControl}>
-              <TouchableOpacity
-                onPress={() =>
-                  setQuantity((prev) => Math.max(1, prev - 1))
-                }
-              >
+              <TouchableOpacity onPress={() => setQuantity((prev) => Math.max(1, prev - 1))}>
                 <Text style={styles.arrow}>{"<"}</Text>
               </TouchableOpacity>
-
               <Text style={styles.quantityText}>{quantity}개</Text>
-
-              <TouchableOpacity
-                onPress={() =>
-                  setQuantity((prev) => Math.min(10, prev + 1))
-                }
-              >
+              <TouchableOpacity onPress={() => setQuantity((prev) => Math.min(10, prev + 1))}>
                 <Text style={styles.arrow}>{">"}</Text>
               </TouchableOpacity>
             </View>
@@ -169,10 +154,7 @@ export default function SnackScreen() {
               <Text style={styles.buttonText}>신청하기</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={{ marginTop: 10 }}
-            >
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 10 }}>
               <Text style={{ color: "gray" }}>닫기</Text>
             </TouchableOpacity>
           </View>
@@ -211,8 +193,18 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     marginBottom: 20,
   },
-  image: { width: 100, height: 100, marginBottom: 8 },
-  name: { textAlign: "center" },
+  image: {
+    width: 100,
+    height: 100,
+    marginBottom: 8,
+    transition: "transform 0.2s ease-in-out", // ✅ 웹 호환용 트랜지션
+  },
+  imageHovered: {
+    transform: [{ scale: 1.1 }], // ✅ 확대 효과
+  },
+  name: {
+    textAlign: "center",
+  },
   soldOutBadge: {
     position: "absolute",
     top: 4,

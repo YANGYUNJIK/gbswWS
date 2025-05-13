@@ -104,12 +104,17 @@ function LayoutContent() {
 
   const handleAlert = () => {
     if (isTeacher) {
-      Alert.alert("🔔 알림", pendingCount > 0 ? `${pendingCount}개의 신청이 처리 대기 중입니다.` : "새로운 신청이 없습니다.");
+      if (pendingCount > 0) {
+        router.push("/admin/orders");
+      } else {
+        Alert.alert("🔔 알림", "새로운 신청이 없습니다.");
+      }
     } else if (isStudent) {
       Alert.alert("📢 알림", "신청하신 항목이 처리되었습니다.");
       setStudentAlert(false);
     }
   };
+
 
   const handleAccount = () => {
     Alert.alert("👤 계정", "로그아웃하시겠습니까?", [
@@ -193,7 +198,7 @@ function LayoutContent() {
           paddingHorizontal: 16,
           zIndex: 999,
           transform: [{ translateX: drawerAnim }],
-          
+
         }}
       >
         {(isTeacher ? [
@@ -203,7 +208,7 @@ function LayoutContent() {
           { label: "📊 대시보드", route: "/admin/dashboard" },
           { label: "👥 사용자 관리", route: "/admin/users" },
           { label: "🚪 로그아웃", route: "/main" },
-          
+
         ] : isStudent ? [
           { label: "🏠 메인", route: "/student" },
           { label: "🥤 음료 신청", route: "/student/drink" },
