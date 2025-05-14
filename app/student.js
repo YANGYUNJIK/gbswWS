@@ -13,11 +13,13 @@ import {
 } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
-// 📐 화면 너비 기준 설정
+// 📐 기본 설정
 const screenWidth = Dimensions.get("window").width;
 const ITEM_WIDTH = screenWidth * 0.22;
 const ITEM_SPACING = 12;
-const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 65;
+const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 85;
+const LOOP_SIZE = 1000;
+const CENTER_INDEX = Math.floor(LOOP_SIZE / 2);
 
 // 📦 원본 데이터
 const rawBannerData = [
@@ -27,69 +29,47 @@ const rawBannerData = [
   { image: require("../assets/test1.jpg"), route: "/banner/4", label: "🛍️ 기타 기능 준비 중" },
 ];
 
-// 🔁 무한 슬라이드를 위한 데이터 확장
-const bannerData = [
-  ...rawBannerData.slice(-2),
-  ...rawBannerData,
-  ...rawBannerData.slice(0, 2),
-];
+// 🔁 1000개 복제
+const bannerData = Array(LOOP_SIZE)
+  .fill(null)
+  .map((_, i) => rawBannerData[i % rawBannerData.length]);
 
 export default function StudentMenu() {
   const router = useRouter();
   const { studentName } = useContext(StudentInfoContext);
   const flatListRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(2); // 진짜 시작 인덱스
+  const [currentIndex, setCurrentIndex] = useState(CENTER_INDEX);
 
-  // 📦 공통 슬라이드 이동 함수
+  // ✅ 이동 함수
   const scrollToIndex = (index, animated = true) => {
     flatListRef.current?.scrollToIndex({ index, animated });
     setCurrentIndex(index);
   };
 
-  // ⏱ 자동 슬라이드
+  // ✅ 자동 슬라이드
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextIndex = currentIndex + 1;
-
-      if (nextIndex >= bannerData.length - 2) {
-        scrollToIndex(nextIndex, true);
-        setTimeout(() => {
-          scrollToIndex(2, false); // 진짜 처음으로 점프
-        }, 350);
-      } else {
-        scrollToIndex(nextIndex, true);
-      }
+      let nextIndex = currentIndex + 1;
+      scrollToIndex(nextIndex, true);
     }, 4000);
-
     return () => clearInterval(interval);
   }, [currentIndex]);
 
-  // ◀ 버튼
-  const handlePrev = () => {
-    const prevIndex = currentIndex - 1;
-
-    if (prevIndex <= 1) {
-      scrollToIndex(prevIndex, true);
-      setTimeout(() => {
-        scrollToIndex(rawBannerData.length + 1, false);
-      }, 350);
-    } else {
-      scrollToIndex(prevIndex, true);
+  // ✅ 끝에 도달하면 중앙으로 jump
+  const handleMomentumScrollEnd = () => {
+    if (currentIndex <= 100 || currentIndex >= LOOP_SIZE - 100) {
+      scrollToIndex(CENTER_INDEX, false);
     }
   };
 
-  // ▶ 버튼
-  const handleNext = () => {
-    const nextIndex = currentIndex + 1;
+  // ◀
+  const handlePrev = () => {
+    scrollToIndex(currentIndex - 1);
+  };
 
-    if (nextIndex >= bannerData.length - 2) {
-      scrollToIndex(nextIndex, true);
-      setTimeout(() => {
-        scrollToIndex(2, false);
-      }, 350);
-    } else {
-      scrollToIndex(nextIndex, true);
-    }
+  // ▶
+  const handleNext = () => {
+    scrollToIndex(currentIndex + 1);
   };
 
   return (
@@ -100,14 +80,15 @@ export default function StudentMenu() {
         </TouchableOpacity>
 
         <FlatList
-          data={bannerData}
           ref={flatListRef}
+          data={bannerData}
           horizontal
           showsHorizontalScrollIndicator={false}
           scrollEnabled={false}
-          initialScrollIndex={2}
+          initialScrollIndex={CENTER_INDEX}
           keyExtractor={(_, index) => index.toString()}
-          getItemLayout={(data, index) => ({
+          onMomentumScrollEnd={handleMomentumScrollEnd}
+          getItemLayout={(_, index) => ({
             length: ITEM_WIDTH + ITEM_SPACING,
             offset: (ITEM_WIDTH + ITEM_SPACING) * index,
             index,
@@ -137,12 +118,11 @@ export default function StudentMenu() {
       {/* ⭕ 인디케이터 */}
       <View style={[styles.indicatorContainer, { width: SLIDER_WIDTH }]}>
         {rawBannerData.map((_, i) => (
-          <Pressable key={i} onPress={() => scrollToIndex(i + 2)}>
+          <Pressable key={i} onPress={() => scrollToIndex(CENTER_INDEX + i)}>
             <View
               style={[
                 styles.dot,
-                (currentIndex - 2 + rawBannerData.length) % rawBannerData.length === i &&
-                  styles.activeDot,
+                currentIndex % rawBannerData.length === i && styles.activeDot,
               ]}
             />
           </Pressable>
@@ -195,7 +175,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-start",
     marginTop: 8,
-    marginLeft: 65,
+    marginLeft: 85,
   },
   dot: {
     width: 8,
