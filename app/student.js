@@ -40,13 +40,11 @@ export default function StudentMenu() {
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(CENTER_INDEX);
 
-  // ✅ 이동 함수
   const scrollToIndex = (index, animated = true) => {
     flatListRef.current?.scrollToIndex({ index, animated });
     setCurrentIndex(index);
   };
 
-  // ✅ 자동 슬라이드
   useEffect(() => {
     const interval = setInterval(() => {
       let nextIndex = currentIndex + 1;
@@ -55,19 +53,16 @@ export default function StudentMenu() {
     return () => clearInterval(interval);
   }, [currentIndex]);
 
-  // ✅ 끝에 도달하면 중앙으로 jump
   const handleMomentumScrollEnd = () => {
     if (currentIndex <= 100 || currentIndex >= LOOP_SIZE - 100) {
       scrollToIndex(CENTER_INDEX, false);
     }
   };
 
-  // ◀
   const handlePrev = () => {
     scrollToIndex(currentIndex - 1);
   };
 
-  // ▶
   const handleNext = () => {
     scrollToIndex(currentIndex + 1);
   };
@@ -115,7 +110,6 @@ export default function StudentMenu() {
         </TouchableOpacity>
       </View>
 
-      {/* ⭕ 인디케이터 */}
       <View style={[styles.indicatorContainer, { width: SLIDER_WIDTH }]}>
         {rawBannerData.map((_, i) => (
           <Pressable key={i} onPress={() => scrollToIndex(CENTER_INDEX + i)}>
@@ -136,14 +130,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f0f4f8",
-    justifyContent: "center",
+    justifyContent: "flex-start", // ✅ 슬라이더를 위로 올림
     alignItems: "center",
+    paddingTop: 32, // ✅ 위에서 여백 확보
   },
   sliderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
+    marginTop: 0, // ✅ 필요시 조절
   },
   arrow: {
     paddingHorizontal: 10,
@@ -172,10 +167,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   indicatorContainer: {
-    height: 300,
     flexDirection: "row",
     justifyContent: "flex-start",
-    marginTop: 16,
+    marginTop: 12,   // ✅ 배너 아래 위치
     marginLeft: 80,
   },
   dot: {

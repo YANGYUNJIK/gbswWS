@@ -1,4 +1,3 @@
-// ✅ /app/admin/orders.js (중앙 정렬 개선)
 import { useEffect, useState } from "react";
 import {
   FlatList,
@@ -14,7 +13,6 @@ const SERVER_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://gbswws.onrender.com";
-
 
 export default function AdminOrdersScreen() {
   const [orders, setOrders] = useState([]);
@@ -58,43 +56,58 @@ export default function AdminOrdersScreen() {
     }
   };
 
+  const isPastDate = (dateStr) => {
+    const today = new Date();
+    const created = new Date(dateStr);
+    return created.toDateString() !== today.toDateString() && created < today;
+  };
+
   const filteredOrders = orders.filter((order) => {
     if (selectedFilter === "전체") return true;
     const field = selectedFilter === "직종" ? "userJob" : "studentName";
     return order[field]?.toLowerCase().includes(filterValue.toLowerCase());
   });
 
-  const renderItem = ({ item }) => (
-    <View style={styles.cardWrapper}>
-      <View style={styles.card}>
-        <Image source={{ uri: item.image }} style={styles.image} />
-        <View style={styles.infoSection}>
-          <Text style={styles.name}>{item.menu}</Text>
-          <Text style={styles.detail}>{item.studentName} / {item.userJob}</Text>
-          <Text style={styles.detail}>{item.quantity}개 · {new Date(item.createdAt).toLocaleTimeString()}</Text>
-          <View style={styles.statusRow}>
-            <Text style={[styles.statusBadge, getStatusColor(item.status)]}>
-              {item.status === "accepted" ? "수락" : item.status === "rejected" ? "거절" : "대기"}
+  const renderItem = ({ item }) => {
+    const isPast = isPastDate(item.createdAt);
+
+    return (
+      <View style={styles.cardWrapper}>
+        <View style={[styles.card, isPast && styles.cardDisabled]}>
+          <Image source={{ uri: item.image }} style={styles.image} />
+          <View style={styles.infoSection}>
+            <Text style={styles.name}>{item.menu}</Text>
+            <Text style={styles.detail}>{item.studentName} / {item.userJob}</Text>
+            <Text style={styles.detail}>
+              {item.quantity}개 · {new Date(item.createdAt).toLocaleString()}
             </Text>
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#5DBB9D" }]}
-                onPress={() => updateOrderStatus(item._id, "accepted")}
-              >
-                <Text style={styles.buttonText}>수락</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#F44336" }]}
-                onPress={() => updateOrderStatus(item._id, "rejected")}
-              >
-                <Text style={styles.buttonText}>거절</Text>
-              </TouchableOpacity>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusBadge, getStatusColor(item.status)]}>
+                {item.status === "accepted" ? "수락" : item.status === "rejected" ? "거절" : "대기"}
+              </Text>
+              {isPast && <Text style={styles.expiredText}>🕓 마감!</Text>}
+              <View style={styles.buttonGroup}>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: "#5DBB9D" }]}
+                  onPress={() => updateOrderStatus(item._id, "accepted")}
+                  disabled={isPast}
+                >
+                  <Text style={styles.buttonText}>수락</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: "#F44336" }]}
+                  onPress={() => updateOrderStatus(item._id, "rejected")}
+                  disabled={isPast}
+                >
+                  <Text style={styles.buttonText}>거절</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -183,7 +196,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 12,
   },
-  
   card: {
     width: 742,
     flexDirection: "row",
@@ -194,6 +206,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#eee",
     alignItems: "center",
+  },
+  cardDisabled: {
+    opacity: 0.4,
   },
   image: {
     width: 60,
@@ -216,8 +231,8 @@ const styles = StyleSheet.create({
   statusRow: {
     marginTop: 6,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 10,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -227,9 +242,15 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+  expiredText: {
+    fontSize: 12,
+    color: "#777",
+    fontWeight: "bold",
+  },
   buttonGroup: {
     flexDirection: "row",
     gap: 6,
+    marginLeft: "auto",
   },
   actionButton: {
     paddingHorizontal: 10,
