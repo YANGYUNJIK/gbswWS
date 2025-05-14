@@ -13,16 +13,13 @@ import {
 } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
-// ✅ 화면 너비 기준으로 아이템 크기 설정
+// 📐 화면 너비 기준 설정
 const screenWidth = Dimensions.get("window").width;
 const ITEM_WIDTH = screenWidth * 0.22;
 const ITEM_SPACING = 12;
-const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 60;
+const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 65;
 
-
-
-
-// ✅ 원본 데이터 (진짜 보여줄 4개)
+// 📦 원본 데이터
 const rawBannerData = [
   { image: require("../assets/test1.jpg"), route: "/student/drink", label: "🥤 음료 신청" },
   { image: require("../assets/test1.jpg"), route: "/student/snack", label: "🍪 간식 신청" },
@@ -30,96 +27,92 @@ const rawBannerData = [
   { image: require("../assets/test1.jpg"), route: "/banner/4", label: "🛍️ 기타 기능 준비 중" },
 ];
 
-// ✅ 무한 루프 구현을 위한 가짜 데이터 포함
+// 🔁 무한 슬라이드를 위한 데이터 확장
 const bannerData = [
-  ...rawBannerData.slice(-2), // 마지막 2개 → 앞에 복제
-  ...rawBannerData,           // 실제 데이터
-  ...rawBannerData.slice(0, 2), // 처음 2개 → 뒤에 복제
+  ...rawBannerData.slice(-2),
+  ...rawBannerData,
+  ...rawBannerData.slice(0, 2),
 ];
 
 export default function StudentMenu() {
   const router = useRouter();
   const { studentName } = useContext(StudentInfoContext);
   const flatListRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(2); // 진짜 시작 인덱스
 
-  // ✅ 무한 슬라이드 핵심: 실제 시작은 index 2 (원본의 첫 항목)
-  const [currentIndex, setCurrentIndex] = useState(2);
-
-  // ✅ 슬라이드 이동 함수
-  const scrollToIndex = (index) => {
-    flatListRef.current?.scrollToIndex({ index, animated: true });
+  // 📦 공통 슬라이드 이동 함수
+  const scrollToIndex = (index, animated = true) => {
+    flatListRef.current?.scrollToIndex({ index, animated });
     setCurrentIndex(index);
   };
 
-  // ✅ 자동 슬라이드
+  // ⏱ 자동 슬라이드
   useEffect(() => {
     const interval = setInterval(() => {
       const nextIndex = currentIndex + 1;
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-      setCurrentIndex(nextIndex);
+
+      if (nextIndex >= bannerData.length - 2) {
+        scrollToIndex(nextIndex, true);
+        setTimeout(() => {
+          scrollToIndex(2, false); // 진짜 처음으로 점프
+        }, 350);
+      } else {
+        scrollToIndex(nextIndex, true);
+      }
     }, 4000);
+
     return () => clearInterval(interval);
   }, [currentIndex]);
 
-  // ✅ 무한 루프처럼 보이게: 맨 끝에 도달하면 순간적으로 2번 인덱스로 점프
-  const handleMomentumScrollEnd = () => {
-    if (currentIndex === bannerData.length - 2) {
-      flatListRef.current?.scrollToIndex({ index: 2, animated: false });
-      setCurrentIndex(2);
-    } else if (currentIndex === 1) {
-      flatListRef.current?.scrollToIndex({ index: rawBannerData.length + 1, animated: false });
-      setCurrentIndex(rawBannerData.length + 1);
-    }
-  };
-
-  // ✅ 버튼 이전/다음
+  // ◀ 버튼
   const handlePrev = () => {
-    if (currentIndex <= 1) {
-      // 맨 앞에 도달했으면 맨 끝으로 순간 이동 (애니메이션 없이)
-      flatListRef.current?.scrollToIndex({ index: rawBannerData.length + 1, animated: false });
-      setCurrentIndex(rawBannerData.length + 1);
+    const prevIndex = currentIndex - 1;
+
+    if (prevIndex <= 1) {
+      scrollToIndex(prevIndex, true);
+      setTimeout(() => {
+        scrollToIndex(rawBannerData.length + 1, false);
+      }, 350);
     } else {
-      // 일반 이동
-      scrollToIndex(currentIndex - 1);
+      scrollToIndex(prevIndex, true);
     }
   };
 
+  // ▶ 버튼
   const handleNext = () => {
-    // 현재 index가 마지막에서 두 번째(= 실제 4번)일 때
-    if (currentIndex >= bannerData.length - 3) {
-      // 순간적으로 2번으로 점프 (진짜 데이터의 첫 번째)
-      flatListRef.current?.scrollToIndex({ index: 2, animated: false });
-      setCurrentIndex(2);
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex >= bannerData.length - 2) {
+      scrollToIndex(nextIndex, true);
+      setTimeout(() => {
+        scrollToIndex(2, false);
+      }, 350);
     } else {
-      scrollToIndex(currentIndex + 1);
+      scrollToIndex(nextIndex, true);
     }
   };
-
 
   return (
     <View style={styles.container}>
-      {/* ✅ 슬라이더 + 버튼 수평 정렬 */}
       <View style={[styles.sliderRow, { width: SLIDER_WIDTH + ITEM_SPACING * 2 }]}>
         <TouchableOpacity onPress={handlePrev} style={styles.arrow}>
           <Image source={require("../assets/arrow-left.png")} style={styles.arrowIcon} />
         </TouchableOpacity>
 
-        {/* ✅ FlatList는 이 안에서만 수평 */}
         <FlatList
           data={bannerData}
           ref={flatListRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           scrollEnabled={false}
-          keyExtractor={(_, index) => index.toString()}
           initialScrollIndex={2}
+          keyExtractor={(_, index) => index.toString()}
           getItemLayout={(data, index) => ({
             length: ITEM_WIDTH + ITEM_SPACING,
             offset: (ITEM_WIDTH + ITEM_SPACING) * index,
             index,
           })}
-          onMomentumScrollEnd={handleMomentumScrollEnd}
-          contentContainerStyle={{ gap: ITEM_SPACING}}
+          contentContainerStyle={{ gap: ITEM_SPACING }}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => router.push(item.route)}>
               <ImageBackground
@@ -141,7 +134,7 @@ export default function StudentMenu() {
         </TouchableOpacity>
       </View>
 
-      {/* ✅ 인디케이터는 FlatList 아래에 따로 정렬 */}
+      {/* ⭕ 인디케이터 */}
       <View style={[styles.indicatorContainer, { width: SLIDER_WIDTH }]}>
         {rawBannerData.map((_, i) => (
           <Pressable key={i} onPress={() => scrollToIndex(i + 2)}>
@@ -149,7 +142,7 @@ export default function StudentMenu() {
               style={[
                 styles.dot,
                 (currentIndex - 2 + rawBannerData.length) % rawBannerData.length === i &&
-                styles.activeDot,
+                  styles.activeDot,
               ]}
             />
           </Pressable>
@@ -157,7 +150,6 @@ export default function StudentMenu() {
       </View>
     </View>
   );
-
 }
 
 const styles = StyleSheet.create({
@@ -167,7 +159,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  sliderContainer: {
+  sliderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -184,7 +176,7 @@ const styles = StyleSheet.create({
   },
   banner: {
     width: ITEM_WIDTH,
-    height: 140, // ✅ 세로 크기 증가
+    height: 140,
     justifyContent: "flex-end",
     alignItems: "flex-end",
     paddingBottom: 8,
@@ -199,6 +191,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+  indicatorContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginTop: 8,
+    marginLeft: 65,
+  },
   dot: {
     width: 8,
     height: 8,
@@ -209,22 +207,4 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: "#5DBB9D",
   },
-  sliderWrapper: {
-    width: SLIDER_WIDTH,
-    alignItems: "center",
-  },
-  sliderRow: {
-    flexDirection: "row", // 👉 슬라이더 + 화살표 좌우 정렬
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  indicatorContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-start", // 왼쪽 정렬 유지
-    marginTop: 8,                 // 👉 화살표보다 아래로 내리는 여백
-    marginLeft: 100,               // 👉 오른쪽으로 밀어주는 여백 (기본: 10 → 40 정도 추천)
-  },
-
-
 });
