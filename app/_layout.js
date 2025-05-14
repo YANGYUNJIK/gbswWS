@@ -14,6 +14,7 @@ import {
 import { io } from "socket.io-client";
 import { StudentInfoContext, StudentInfoProvider } from "../context/StudentInfoContext";
 
+
 const SERVER_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:3000"
@@ -262,6 +263,10 @@ function LayoutContent() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message: cheerText }),
                   });
+                  // if (!cheerText.trim()) {
+                  //   Alert.alert("⚠️ 메시지를 입력해주세요.");
+                  //   return;
+                  // }
                   setCheerModalVisible(false);
                   setCheerText("");
                 }}

@@ -1,13 +1,12 @@
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
+import CheerFadeLine from "../components/CheerFadeLine"; // 경로는 프로젝트에 맞게 조정
 export default function TeacherScreen() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>👩‍🏫 선생님 메뉴</Text>
-
+      <CheerFadeLine />
       <TouchableOpacity
         style={[styles.button, { backgroundColor: "#5DBB9D" }]}
         onPress={() => router.push("/admin/manage")}
@@ -42,10 +41,10 @@ export default function TeacherScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f0f4f8",
-    padding: 20,
+    padding: 0,
+    paddingTop: 0,           // ✅ 추가: 상단 간격 제거
   },
   title: {
     fontSize: 26,

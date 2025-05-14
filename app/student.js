@@ -12,7 +12,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import CheerScrollList from "../components/CheerScrollList"; // 경로는 프로젝트에 맞게 조정
 import { StudentInfoContext } from "../context/StudentInfoContext";
+
 
 const screenWidth = Dimensions.get("window").width;
 const ITEM_WIDTH = screenWidth * 0.22;
@@ -77,7 +79,7 @@ export default function StudentMenu() {
     const animateMessage = () => {
       Animated.timing(scrollAnim, {
         toValue: -textWidth,
-        duration: 10000,
+        duration: Math.floor(Math.random() * 8000) + 15000,
         useNativeDriver: true,
       }).start(() => {
         setCurrentMessageIndex((prev) => (prev + 1) % cheerMessages.length);
@@ -111,14 +113,8 @@ export default function StudentMenu() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.cheerBannerContainer}>
-        <Animated.Text
-          onLayout={(e) => setTextWidth(e.nativeEvent.layout.width)}
-          style={[styles.cheerBannerText, { transform: [{ translateX: scrollAnim }] }]}
-        >
-          🎉 {cheerMessages[currentMessageIndex]?.message || "응원 메시지를 불러오는 중..."}
-        </Animated.Text>
-      </View>
+
+      <CheerScrollList cheerMessages={cheerMessages} />
 
       {/* 기존 배너와 카테고리 UI */}
       <View style={[styles.sliderRow, { width: SLIDER_WIDTH + ITEM_SPACING * 2 }]}>
@@ -201,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f4f8",
     justifyContent: "flex-start",
     alignItems: "center",
-    paddingTop: 100,
+    paddingTop: 0,
   },
   cheerBannerContainer: {
     width: "100%",

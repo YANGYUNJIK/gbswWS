@@ -23,15 +23,21 @@ router.get("/today", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { message } = req.body;
-    if (!message) return res.status(400).json({ error: "메시지가 비어 있음" });
+    if (!message || message.trim() === "") {
+      return res.status(400).json({ error: "메시지가 비어 있음" });
+    }
 
     const newCheer = new Cheer({ message });
     await newCheer.save();
+
+    const io = req.app.get("io");
+    if (io) io.emit("newCheer", newCheer); // socket으로 실시간 전달도 가능
+
     res.status(201).json(newCheer);
   } catch (err) {
-    console.error("응원 등록 실패:", err);
     res.status(500).json({ error: "서버 오류" });
   }
 });
+
 
 module.exports = router;
