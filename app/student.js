@@ -23,9 +23,9 @@ const CENTER_INDEX = Math.floor(LOOP_SIZE / 2);
 
 // 📦 원본 데이터
 const rawBannerData = [
-  { image: require("../assets/test1.jpg"), route: "/student/drink", label: "🥤 음료 신청" },
-  { image: require("../assets/test1.jpg"), route: "/student/snack", label: "🍪 간식 신청" },
-  { image: require("../assets/test1.jpg"), route: "/student/orders", label: "📄 신청 내역" },
+  { image: require("../assets/drink.png"), route: "/student/drink", label: "🥤 음료 신청" },
+  { image: require("../assets/snack.png"), route: "/student/snack", label: "🍪 간식 신청" },
+  { image: require("../assets/report.png"), route: "/student/orders", label: "📄 신청 내역" },
   { image: require("../assets/test1.jpg"), route: "/banner/4", label: "🛍️ 기타 기능 준비 중" },
 ];
 
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
   arrow: {
     paddingHorizontal: 10,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   banner: {
     width: ITEM_WIDTH,
-    height: 140,
+    height: 165,
     justifyContent: "flex-end",
     alignItems: "flex-end",
     paddingBottom: 8,
@@ -172,10 +172,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   indicatorContainer: {
+    height: 300,
     flexDirection: "row",
     justifyContent: "flex-start",
-    marginTop: 8,
-    marginLeft: 85,
+    marginTop: 16,
+    marginLeft: 80,
   },
   dot: {
     width: 8,
