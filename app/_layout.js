@@ -1,4 +1,3 @@
-// ✅ _layout.js (왼쪽 사이드 드로어 + 학생/선생님 종 반영)
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
 import {
@@ -8,8 +7,9 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { io } from "socket.io-client";
 import { StudentInfoContext, StudentInfoProvider } from "../context/StudentInfoContext";
@@ -32,10 +32,13 @@ function LayoutContent() {
   const [studentAlert, setStudentAlert] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
   const [isStudent, setIsStudent] = useState(false);
-  const [ready, setReady] = useState(false); // ✅ 렌더 준비 상태
+  const [ready, setReady] = useState(false);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.13)).current;
+
+  const [cheerModalVisible, setCheerModalVisible] = useState(false);
+  const [cheerText, setCheerText] = useState("");
 
   useEffect(() => {
     const targetDate = new Date("2025-09-19");
@@ -76,14 +79,14 @@ function LayoutContent() {
       }
     });
 
-    setReady(true); // ✅ 세그먼트 확인 후 준비 완료
+    setReady(true);
     return () => {
       socket.off("newOrder");
       socket.off("orderUpdated");
     };
   }, [segments]);
 
-  if (!ready) return null; // ✅ 세그먼트 준비 전에는 렌더링 안함
+  if (!ready) return null;
 
   const openDrawer = () => {
     setDrawerOpen(true);
@@ -115,7 +118,6 @@ function LayoutContent() {
     }
   };
 
-
   const handleAccount = () => {
     Alert.alert("👤 계정", "로그아웃하시겠습니까?", [
       { text: "취소", style: "cancel" },
@@ -128,6 +130,26 @@ function LayoutContent() {
       },
     ]);
   };
+
+  const teacherMenu = [
+    { label: "🏠 메인", route: "/teacher" },
+    { label: "📦 간식 관리", route: "/admin/manage" },
+    { label: "📋 신청 관리", route: "/admin/orders" },
+    { label: "📊 대시보드", route: "/admin/dashboard" },
+    { label: "👥 사용자 관리", route: "/admin/users" },
+    { label: "📣 응원 작성", route: "cheer" },
+    { label: "🚪 로그아웃", route: "/main" },
+  ];
+
+  const studentMenu = [
+    { label: "🏠 메인", route: "/student" },
+    { label: "🥤 음료 신청", route: "/student/drink" },
+    { label: "🍪 간식 신청", route: "/student/snack" },
+    { label: "📄 신청 내역", route: "/student/orders" },
+    { label: "🚪 로그아웃", route: "/main" },
+  ];
+
+  const menuItems = isTeacher ? teacherMenu : isStudent ? studentMenu : [];
 
   return (
     <>
@@ -198,29 +220,18 @@ function LayoutContent() {
           paddingHorizontal: 16,
           zIndex: 999,
           transform: [{ translateX: drawerAnim }],
-
         }}
       >
-        {(isTeacher ? [
-          { label: "🏠 메인", route: "/teacher" },
-          { label: "📦 간식 관리", route: "/admin/manage" },
-          { label: "📋 신청 관리", route: "/admin/orders" },
-          { label: "📊 대시보드", route: "/admin/dashboard" },
-          { label: "👥 사용자 관리", route: "/admin/users" },
-          { label: "🚪 로그아웃", route: "/main" },
-
-        ] : isStudent ? [
-          { label: "🏠 메인", route: "/student" },
-          { label: "🥤 음료 신청", route: "/student/drink" },
-          { label: "🍪 간식 신청", route: "/student/snack" },
-          { label: "📄 신청 내역", route: "/student/orders" },
-          { label: "🚪 로그아웃", route: "/main" },
-        ] : []).map(({ label, route }) => (
+        {menuItems.map(({ label, route }) => (
           <TouchableOpacity
             key={label}
             onPress={() => {
               closeDrawer();
-              router.push(route);
+              if (label === "📣 응원 작성") {
+                setCheerModalVisible(true);
+              } else {
+                router.push(route);
+              }
             }}
             style={{ marginBottom: 20 }}
           >
@@ -228,6 +239,39 @@ function LayoutContent() {
           </TouchableOpacity>
         ))}
       </Animated.View>
+
+      {/* 응원 메시지 작성 모달 */}
+      {cheerModalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>📣 응원 메시지 작성</Text>
+            <TextInput
+              value={cheerText}
+              onChangeText={setCheerText}
+              placeholder="예: 모두 파이팅하세요!"
+              style={styles.input}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => setCheerModalVisible(false)}>
+                <Text>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  await fetch(`${SERVER_URL}/cheer`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: cheerText }),
+                  });
+                  setCheerModalVisible(false);
+                  setCheerText("");
+                }}
+              >
+                <Text style={{ color: "blue" }}>등록</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </>
   );
 }
@@ -263,5 +307,35 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 11,
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 12,
+    width: "80%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 });

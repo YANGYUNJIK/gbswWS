@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -9,11 +10,10 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
-// 📐 기본 설정
 const screenWidth = Dimensions.get("window").width;
 const ITEM_WIDTH = screenWidth * 0.22;
 const ITEM_SPACING = 12;
@@ -21,15 +21,25 @@ const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 85;
 const LOOP_SIZE = 1000;
 const CENTER_INDEX = Math.floor(LOOP_SIZE / 2);
 
-// 📦 원본 데이터
+const SERVER_URL =
+  typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://gbswws.onrender.com";
+
 const rawBannerData = [
   { image: require("../assets/drink.png"), route: "/student/drink", label: "🥤 음료 신청" },
   { image: require("../assets/snack.png"), route: "/student/snack", label: "🍪 간식 신청" },
   { image: require("../assets/report.png"), route: "/student/orders", label: "📄 신청 내역" },
-  { image: require("../assets/test1.jpg"), route: "/banner/4", label: "🛍️ 기타 기능 준비 중" },
+  { image: require("../assets/test1.jpg"), route: "/banner/4", label: "🛍️ 준비 중" },
+];
+const categoryItems = [
+  { label: "게임개발", image: require("../assets/gameG.png"), route: "/category/game" },
+  { label: "모바일앱개발", image: require("../assets/mobileG.png"), route: "/category/mobile" },
+  { label: "사이버보안", image: require("../assets/secureG.png"), route: "/category/security" },
+  { label: "정보기술", image: require("../assets/codeG.png"), route: "/category/it" },
+  { label: "클라우드", image: require("../assets/cloudG.png"), route: "/category/cloud" },
 ];
 
-// 🔁 1000개 복제
 const bannerData = Array(LOOP_SIZE)
   .fill(null)
   .map((_, i) => rawBannerData[i % rawBannerData.length]);
@@ -40,18 +50,55 @@ export default function StudentMenu() {
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(CENTER_INDEX);
 
+  const [cheerMessages, setCheerMessages] = useState([]);
+  const scrollAnim = useRef(new Animated.Value(screenWidth)).current;
+  const [textWidth, setTextWidth] = useState(0);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchCheer = async () => {
+      try {
+        const res = await fetch(`${SERVER_URL}/cheer/today`);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const shuffled = data.sort(() => 0.5 - Math.random());
+          setCheerMessages(shuffled);
+        }
+      } catch (error) {
+        console.error("응원 메시지 불러오기 실패", error);
+      }
+    };
+    fetchCheer();
+  }, []);
+
+  useEffect(() => {
+    if (!cheerMessages.length || !textWidth) return;
+    scrollAnim.setValue(screenWidth);
+    const animateMessage = () => {
+      Animated.timing(scrollAnim, {
+        toValue: -textWidth,
+        duration: 10000,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentMessageIndex((prev) => (prev + 1) % cheerMessages.length);
+      });
+    };
+    animateMessage();
+    const interval = setInterval(animateMessage, 11000);
+    return () => clearInterval(interval);
+  }, [cheerMessages, textWidth]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      scrollToIndex(currentIndex + 1, true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
   const scrollToIndex = (index, animated = true) => {
     flatListRef.current?.scrollToIndex({ index, animated });
     setCurrentIndex(index);
   };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      let nextIndex = currentIndex + 1;
-      scrollToIndex(nextIndex, true);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [currentIndex]);
 
   const handleMomentumScrollEnd = () => {
     if (currentIndex <= 100 || currentIndex >= LOOP_SIZE - 100) {
@@ -59,16 +106,21 @@ export default function StudentMenu() {
     }
   };
 
-  const handlePrev = () => {
-    scrollToIndex(currentIndex - 1);
-  };
-
-  const handleNext = () => {
-    scrollToIndex(currentIndex + 1);
-  };
+  const handlePrev = () => scrollToIndex(currentIndex - 1);
+  const handleNext = () => scrollToIndex(currentIndex + 1);
 
   return (
     <View style={styles.container}>
+      <View style={styles.cheerBannerContainer}>
+        <Animated.Text
+          onLayout={(e) => setTextWidth(e.nativeEvent.layout.width)}
+          style={[styles.cheerBannerText, { transform: [{ translateX: scrollAnim }] }]}
+        >
+          🎉 {cheerMessages[currentMessageIndex]?.message || "응원 메시지를 불러오는 중..."}
+        </Animated.Text>
+      </View>
+
+      {/* 기존 배너와 카테고리 UI */}
       <View style={[styles.sliderRow, { width: SLIDER_WIDTH + ITEM_SPACING * 2 }]}>
         <TouchableOpacity onPress={handlePrev} style={styles.arrow}>
           <Image source={require("../assets/arrow-left.png")} style={styles.arrowIcon} />
@@ -122,6 +174,23 @@ export default function StudentMenu() {
           </Pressable>
         ))}
       </View>
+
+      {/* ✅ 카테고리 */}
+      <View style={styles.categoryContainer}>
+        <FlatList
+          data={categoryItems}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.categoryList}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => router.push(item.route)} style={styles.categoryItem}>
+              <Image source={item.image} style={styles.categoryImage} />
+              <Text style={styles.categoryLabel}>{item.label}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
     </View>
   );
 }
@@ -130,15 +199,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f0f4f8",
-    justifyContent: "flex-start", // ✅ 슬라이더를 위로 올림
+    justifyContent: "flex-start",
     alignItems: "center",
-    paddingTop: 32, // ✅ 위에서 여백 확보
+    paddingTop: 100,
+  },
+  cheerBannerContainer: {
+    width: "100%",
+    height: 32,
+    overflow: "hidden",
+    backgroundColor: "#fff4d6",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderColor: "#ffe0a3",
+  },
+  cheerBannerText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#cc8400",
+    whiteSpace: "nowrap",
   },
   sliderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 0, // ✅ 필요시 조절
   },
   arrow: {
     paddingHorizontal: 10,
@@ -169,7 +253,7 @@ const styles = StyleSheet.create({
   indicatorContainer: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    marginTop: 12,   // ✅ 배너 아래 위치
+    marginTop: 12,
     marginLeft: 80,
   },
   dot: {
@@ -181,5 +265,44 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     backgroundColor: "#5DBB9D",
+  },
+  categoryContainer: {
+    marginTop: 50,
+    alignItems: "center",
+  },
+  categoryList: {
+    paddingHorizontal: 16,
+  },
+  categoryItem: {
+    alignItems: "center",
+    marginHorizontal: 25,
+  },
+  categoryImage: {
+    width: 60,
+    height: 60,
+    resizeMode: "contain",
+    marginBottom: 6,
+  },
+  categoryLabel: {
+    fontSize: 12,
+    color: "#333",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  cheerBannerContainer: {
+    width: "100%",
+    height: 36,
+    overflow: "hidden",
+    backgroundColor: "#000", // 검은 배경
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderColor: "#333",
+    marginBottom: 16, // 배너와 간격
+  },
+  cheerBannerText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#00ffcc", // 밝은 민트 글씨
   },
 });
