@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { StudentInfoContext } from "../context/StudentInfoContext";
 
@@ -17,7 +17,10 @@ import { StudentInfoContext } from "../context/StudentInfoContext";
 const screenWidth = Dimensions.get("window").width;
 const ITEM_WIDTH = screenWidth * 0.22;
 const ITEM_SPACING = 12;
-const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 97;
+const SLIDER_WIDTH = ITEM_WIDTH * 3 + ITEM_SPACING * 2 + 60;
+
+
+
 
 // ✅ 원본 데이터 (진짜 보여줄 4개)
 const rawBannerData = [
@@ -82,7 +85,9 @@ export default function StudentMenu() {
   };
 
   const handleNext = () => {
-    if (currentIndex >= bannerData.length - 2) {
+    // 현재 index가 마지막에서 두 번째(= 실제 4번)일 때
+    if (currentIndex >= bannerData.length - 3) {
+      // 순간적으로 2번으로 점프 (진짜 데이터의 첫 번째)
       flatListRef.current?.scrollToIndex({ index: 2, animated: false });
       setCurrentIndex(2);
     } else {
@@ -90,13 +95,16 @@ export default function StudentMenu() {
     }
   };
 
+
   return (
     <View style={styles.container}>
-      <View style={[styles.sliderContainer, { width: SLIDER_WIDTH }]}>
+      {/* ✅ 슬라이더 + 버튼 수평 정렬 */}
+      <View style={[styles.sliderRow, { width: SLIDER_WIDTH + ITEM_SPACING * 2 }]}>
         <TouchableOpacity onPress={handlePrev} style={styles.arrow}>
           <Image source={require("../assets/arrow-left.png")} style={styles.arrowIcon} />
         </TouchableOpacity>
 
+        {/* ✅ FlatList는 이 안에서만 수평 */}
         <FlatList
           data={bannerData}
           ref={flatListRef}
@@ -104,14 +112,14 @@ export default function StudentMenu() {
           showsHorizontalScrollIndicator={false}
           scrollEnabled={false}
           keyExtractor={(_, index) => index.toString()}
-          initialScrollIndex={2} // ✅ 시작은 2번 (원본 첫 항목)
+          initialScrollIndex={2}
           getItemLayout={(data, index) => ({
             length: ITEM_WIDTH + ITEM_SPACING,
             offset: (ITEM_WIDTH + ITEM_SPACING) * index,
             index,
           })}
           onMomentumScrollEnd={handleMomentumScrollEnd}
-          contentContainerStyle={{ gap: ITEM_SPACING }}
+          contentContainerStyle={{ gap: ITEM_SPACING}}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => router.push(item.route)}>
               <ImageBackground
@@ -124,6 +132,7 @@ export default function StudentMenu() {
             </TouchableOpacity>
           )}
         />
+
         <TouchableOpacity onPress={handleNext} style={styles.arrow}>
           <Image
             source={require("../assets/arrow-left.png")}
@@ -131,16 +140,24 @@ export default function StudentMenu() {
           />
         </TouchableOpacity>
       </View>
-      {/* ✅ 인디케이터: 실제 원본 데이터 기준 (0~3) */}
-      <View style={styles.indicatorContainer}>
+
+      {/* ✅ 인디케이터는 FlatList 아래에 따로 정렬 */}
+      <View style={[styles.indicatorContainer, { width: SLIDER_WIDTH }]}>
         {rawBannerData.map((_, i) => (
           <Pressable key={i} onPress={() => scrollToIndex(i + 2)}>
-            <View style={[styles.dot, (currentIndex - 2 + rawBannerData.length) % rawBannerData.length === i && styles.activeDot]} />
+            <View
+              style={[
+                styles.dot,
+                (currentIndex - 2 + rawBannerData.length) % rawBannerData.length === i &&
+                styles.activeDot,
+              ]}
+            />
           </Pressable>
         ))}
       </View>
     </View>
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -182,12 +199,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  indicatorContainer: {
-    flexDirection: "row",
-    position: "absolute",
-    bottom: 20,
-    left: 20,
-  },
   dot: {
     width: 8,
     height: 8,
@@ -198,4 +209,22 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: "#5DBB9D",
   },
+  sliderWrapper: {
+    width: SLIDER_WIDTH,
+    alignItems: "center",
+  },
+  sliderRow: {
+    flexDirection: "row", // 👉 슬라이더 + 화살표 좌우 정렬
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  indicatorContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start", // 왼쪽 정렬 유지
+    marginTop: 8,                 // 👉 화살표보다 아래로 내리는 여백
+    marginLeft: 100,               // 👉 오른쪽으로 밀어주는 여백 (기본: 10 → 40 정도 추천)
+  },
+
+
 });
