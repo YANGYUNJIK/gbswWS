@@ -143,7 +143,7 @@ export default function SnackScreen() {
         <TouchableOpacity onPress={() => setFilter("inStock")} style={[styles.filterButton, filter === "inStock" && styles.activeFilter]}>
           <Text style={styles.filterText}>재고 있음</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setFilter("soldOut")} style={[styles.filterButton, filter === "soldOut" && styles.activeFilter]}>
+        <TouchableOpacity onPress={() => setFilter("soldOut")} style={[styles.filterButton, filter === "soldOut" && styles.activeFilter2]}>
           <Text style={styles.filterText}>품절</Text>
         </TouchableOpacity>
       </View>
@@ -210,6 +210,9 @@ const styles = StyleSheet.create({
   },
   activeFilter: {
     backgroundColor: "#5DBB9D",
+  },
+  activeFilter2: {
+    backgroundColor: "red",
   },
   filterText: {
     color: "#fff",

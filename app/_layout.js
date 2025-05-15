@@ -6,11 +6,12 @@ import {
   Dimensions,
   FlatList,
   Keyboard,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { io } from "socket.io-client";
 import { StudentInfoContext, StudentInfoProvider } from "../context/StudentInfoContext";
@@ -35,16 +36,17 @@ function LayoutContent() {
   const [isStudent, setIsStudent] = useState(false);
   const [ready, setReady] = useState(false);
 
+  const [cheerTarget, setCheerTarget] = useState("student");
+  const [cheerModalVisible, setCheerModalVisible] = useState(false);
+  const [cheerText, setCheerText] = useState("");
+
   const [chatVisible, setChatVisible] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [hasNewChat, setHasNewChat] = useState(false);
 
-  const [cheerModalVisible, setCheerModalVisible] = useState(false);
-  const [cheerText, setCheerText] = useState("");
-  const [cheerTarget, setCheerTarget] = useState("student");
-
-  const drawerAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.13)).current;
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.4)).current;
 
   const sendMessage = () => {
     if (!newMessage.trim()) return;
@@ -55,30 +57,6 @@ function LayoutContent() {
     };
     socket.emit("chatMessage", msg);
     setNewMessage("");
-  };
-
-  const handleCheerSubmit = async () => {
-    if (!cheerText.trim()) {
-      Alert.alert("⚠️ 메시지를 입력해주세요.");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${SERVER_URL}/cheer`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: cheerText, target: cheerTarget }),
-      });
-
-      if (!res.ok) throw new Error("등록 실패");
-
-      socket.emit("newCheer");
-      Alert.alert("✅ 등록 완료", "응원 메시지가 등록되었습니다.");
-      setCheerModalVisible(false);
-      setCheerText("");
-    } catch (err) {
-      Alert.alert("❌ 오류", "메시지 등록에 실패했습니다.");
-    }
   };
 
   useEffect(() => {
@@ -114,9 +92,7 @@ function LayoutContent() {
         });
     }
 
-    socket.on("newOrder", () => {
-      setPendingCount((prev) => prev + 1);
-    });
+    socket.on("newOrder", () => setPendingCount((prev) => prev + 1));
     socket.on("orderUpdated", (order) => {
       if ((admin || teacher) && order.status !== "pending") {
         setPendingCount((prev) => Math.max(prev - 1, 0));
@@ -135,12 +111,56 @@ function LayoutContent() {
 
   if (!ready) return null;
 
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    Animated.timing(drawerAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(drawerAnim, {
+      toValue: -SCREEN_WIDTH * 0.15,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setDrawerOpen(false));
+  };
+
+  const handleCheerSubmit = async () => {
+    if (!cheerText.trim()) {
+      Alert.alert("⚠️ 메시지를 입력해주세요.");
+      return;
+    }
+    try {
+      const res = await fetch(`${SERVER_URL}/cheer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: cheerText, target: cheerTarget }),
+      });
+      if (!res.ok) throw new Error("등록 실패");
+      Alert.alert("✅ 등록 완료", "응원 메시지가 등록되었습니다.");
+      socket.emit("newCheer");
+      setCheerModalVisible(false);
+      setCheerText("");
+    } catch (err) {
+      Alert.alert("❌ 오류", "메시지 등록에 실패했습니다.");
+    }
+  };
+
   return (
     <>
       <Stack
         screenOptions={{
           headerShown: true,
           headerBackVisible: false,
+          headerLeft: () =>
+            (isTeacher || isStudent) && (
+              <TouchableOpacity onPress={openDrawer}>
+                <Text style={{ fontSize: 30, marginLeft: 10 }}> ☰ </Text>
+              </TouchableOpacity>
+            ),
           headerTitle: () => (
             <TouchableOpacity onPress={() => router.replace("/main")}>
               <Text style={{ fontSize: 20, fontWeight: "bold", color: "#333" }}>{dDayText}</Text>
@@ -150,66 +170,124 @@ function LayoutContent() {
             <View style={styles.headerRight}>
               <TouchableOpacity onPress={() => { setChatVisible(true); setHasNewChat(false); }} style={{ position: "relative" }}>
                 <Text style={{ fontSize: 20 }}>💬</Text>
-                {hasNewChat && <View style={styles.redDot} />}
+                {hasNewChat && <View style={styles.dot} />}
               </TouchableOpacity>
               {isTeacher && (
-                <TouchableOpacity onPress={() => setCheerModalVisible(true)} style={{ marginLeft: 10 }}>
+                <TouchableOpacity onPress={() => setCheerModalVisible(true)}>
                   <Text style={{ fontSize: 20 }}>📣</Text>
                 </TouchableOpacity>
               )}
               {(isTeacher || isStudent) && (
                 <TouchableOpacity onPress={() => {
                   if (isTeacher) {
-                    pendingCount > 0 ? router.push("/admin/orders") : Alert.alert("🔔 알림", "새로운 신청이 없습니다.");
+                    pendingCount > 0
+                      ? router.push("/admin/orders")
+                      : Alert.alert("🔔 알림", "새로운 신청이 없습니다.");
                   } else {
                     Alert.alert("📢 알림", "신청하신 항목이 처리되었습니다.");
                     setStudentAlert(false);
                   }
-                }} style={{ marginLeft: 10, position: "relative" }}>
+                }} style={{ position: "relative" }}>
                   <Text style={{ fontSize: 20 }}>🔔</Text>
                   {isTeacher && pendingCount > 0 && (
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>{pendingCount}</Text>
                     </View>
                   )}
-                  {isStudent && studentAlert && <View style={styles.redDot} />}
+                  {isStudent && studentAlert && <View style={[styles.badge, { minWidth: 10 }]} />}
                 </TouchableOpacity>
               )}
             </View>
           ),
-          headerStyle: { backgroundColor: "#f5f9ff", borderBottomWidth: 1, borderBottomColor: "#ddd" },
+          headerStyle: {
+            backgroundColor: "#f5f9ff",
+            borderBottomWidth: 1,
+            borderBottomColor: "#ddd",
+          },
         }}
       />
 
-      {/* 응원 메시지 작성 모달 */}
+      {drawerOpen && (
+        <Pressable
+          onPress={closeDrawer}
+          style={{
+            position: "absolute",
+            top: 0, left: 0,
+            width: "100%", height: "100%",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}
+        />
+      )}
+
+      <Animated.View
+        style={{
+          position: "absolute", top: 0, bottom: 0, left: 0,
+          width: SCREEN_WIDTH * 0.15,
+          backgroundColor: "#fff",
+          paddingTop: 60,
+          paddingHorizontal: 16,
+          zIndex: 999,
+          transform: [{ translateX: drawerAnim }],
+        }}
+      >
+        {(isTeacher || isStudent) && (
+          (isTeacher
+            ? [
+                { label: "🏠 메인", route: "/teacher" },
+                { label: "📦 간식 관리", route: "/admin/manage" },
+                { label: "📋 신청 관리", route: "/admin/orders" },
+                { label: "📊 대시보드", route: "/admin/dashboard" },
+                { label: "👥 사용자 관리", route: "/admin/users" },
+              ]
+            : [
+                { label: "🏠 메인", route: "/student" },
+                { label: "🥤 음료 신청", route: "/student/drink" },
+                { label: "🍪 간식 신청", route: "/student/snack" },
+                { label: "🍜 라면 신청", route: "/student/ramen" },
+                { label: "📄 신청 내역", route: "/student/orders" },
+              ]
+          ).concat({ label: "🚪 로그아웃", route: "/main" }).map(({ label, route }) => (
+            <TouchableOpacity
+              key={label}
+              onPress={() => {
+                closeDrawer();
+                router.push(route);
+              }}
+              style={{ marginBottom: 20 }}
+            >
+              <Text style={{ fontSize: 16 }}>{label}</Text>
+            </TouchableOpacity>
+          ))
+        )}
+      </Animated.View>
+
       {cheerModalVisible && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
               <Text style={styles.modalTitle}>📣 응원 메시지 작성</Text>
               <View style={{ flexDirection: "row", gap: 10 }}>
-                {["student", "teacher"].map((tgt) => (
-                  <TouchableOpacity key={tgt} onPress={() => setCheerTarget(tgt)}>
-                    <Text style={{
-                      fontWeight: cheerTarget === tgt ? "bold" : "normal",
-                      color: cheerTarget === tgt ? "#4A90E2" : "#666"
-                    }}>
-                      {tgt === "student" ? "학생" : "교사"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                <TouchableOpacity onPress={() => setCheerTarget("student")}>
+                  <Text style={{ fontWeight: cheerTarget === "student" ? "bold" : "normal", color: cheerTarget === "student" ? "#4A90E2" : "#666" }}>
+                    학생
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setCheerTarget("teacher")}>
+                  <Text style={{ fontWeight: cheerTarget === "teacher" ? "bold" : "normal", color: cheerTarget === "teacher" ? "#4A90E2" : "#666" }}>
+                    교사
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
             <TextInput
               value={cheerText}
               onChangeText={setCheerText}
               placeholder="예: 모두 파이팅하세요!"
-              style={styles.input}
               onSubmitEditing={() => {
                 Keyboard.dismiss();
                 handleCheerSubmit();
               }}
-              blurOnSubmit={false}
+              style={styles.input}
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity onPress={() => setCheerModalVisible(false)}>
@@ -223,21 +301,21 @@ function LayoutContent() {
         </View>
       )}
 
-      {/* 채팅 모달 */}
       {chatVisible && (
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { height: "60%" }]}>
             <Text style={styles.modalTitle}>💬 실시간 채팅</Text>
-            <FlatList
-              data={chatMessages}
-              keyExtractor={(_, i) => i.toString()}
-              renderItem={({ item }) => (
-                <Text style={{ marginVertical: 2 }}>
-                  <Text style={{ fontWeight: "bold" }}>{item.sender}</Text>: {item.text}
-                </Text>
-              )}
-              style={{ flex: 1, marginVertical: 10 }}
-            />
+            <View style={{ flex: 1, marginVertical: 10 }}>
+              <FlatList
+                data={chatMessages}
+                keyExtractor={(_, i) => i.toString()}
+                renderItem={({ item }) => (
+                  <Text style={{ marginVertical: 2 }}>
+                    <Text style={{ fontWeight: "bold" }}>{item.sender}</Text>: {item.text}
+                  </Text>
+                )}
+              />
+            </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}
@@ -272,8 +350,17 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 14,
     marginRight: 16,
+  },
+  dot: {
+    position: "absolute",
+    top: -5,
+    right: -6,
+    backgroundColor: "red",
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   badge: {
     position: "absolute",
@@ -291,15 +378,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 11,
     fontWeight: "bold",
-  },
-  redDot: {
-    position: "absolute",
-    top: -5,
-    right: -6,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "red",
   },
   modalOverlay: {
     position: "absolute",
@@ -324,7 +402,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     padding: 10,
-    marginVertical: 10,
+    marginBottom: 10,
   },
   modalButtons: {
     flexDirection: "row",

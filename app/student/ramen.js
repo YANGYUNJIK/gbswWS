@@ -153,7 +153,7 @@ export default function RamenScreen() {
         <TouchableOpacity onPress={() => setFilter("inStock")} style={[styles.filterButton, filter === "inStock" && styles.activeFilter]}>
           <Text style={styles.filterText}>재고 있음</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setFilter("soldOut")} style={[styles.filterButton, filter === "soldOut" && styles.activeFilter]}>
+        <TouchableOpacity onPress={() => setFilter("soldOut")} style={[styles.filterButton, filter === "soldOut" && styles.activeFilter2]}>
           <Text style={styles.filterText}>품절</Text>
         </TouchableOpacity>
       </View>
@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
   filterContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 20 },
   filterButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: "#ccc", marginHorizontal: 4 },
   activeFilter: { backgroundColor: "#5DBB9D" },
+  activeFilter2: { backgroundColor: "red" },
   filterText: { color: "#fff", fontWeight: "bold" },
   card: { width: CARD_WIDTH, marginBottom: 35, borderWidth: 1, borderColor: "#ccc", padding: 12, borderRadius: 10, alignItems: "center", backgroundColor: "#fff", elevation: 2, minHeight: 150, justifyContent: "center" },
   cardPlaceholder: { width: CARD_WIDTH, marginBottom: 20 },
