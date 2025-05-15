@@ -1,7 +1,6 @@
-// ✅ /app/main.js (ImageBackground로 leftPane 투명 배경 적용 + teacherName 저장 보장)
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// ✅ /app/main.js (ImageBackground로 leftPane 투명 배경 적용)
 import { useRouter } from "expo-router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import {
   Alert,
   Image,
@@ -19,20 +18,14 @@ const SERVER_URL =
     ? "http://localhost:3000"
     : "https://gbswws.onrender.com";
 
+
 export default function MainScreen() {
   const router = useRouter();
-  const { saveStudentInfo, saveTeacherInfo, clearInfo } = useContext(StudentInfoContext);
+  const { saveStudentInfo } = useContext(StudentInfoContext);
+
   const [role, setRole] = useState("student");
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
-
-  // 👇 이 위치에 추가
-  useEffect(() => {
-    const init = async () => {
-      await clearInfo(); // 초기화 수행
-    };
-    init(); // 호출
-  }, []);
 
   const handleLogin = async () => {
     if (!id.trim() || !password.trim()) {
@@ -56,14 +49,10 @@ export default function MainScreen() {
 
       Alert.alert("✅ 로그인 성공");
 
-      // ✅ 역할 저장 (선택적 기능이지만 추천)
-      await AsyncStorage.setItem("role", role);
-
       if (role === "student") {
-        await saveStudentInfo(data.user.name, data.user.category);
+        saveStudentInfo(data.user.name, data.user.category);
         router.push("/student");
       } else {
-        await saveTeacherInfo("선생님"); // 👈 반드시 await 처리!
         router.push("/teacher");
       }
 
@@ -77,7 +66,6 @@ export default function MainScreen() {
     ? require("../assets/world2.png")
     : require("../assets/world1.png");
 
-
   return (
     <View style={styles.container}>
       <View style={styles.leftPane}>
@@ -90,23 +78,16 @@ export default function MainScreen() {
 
       <View style={styles.rightPane}>
         <Image source={imageSource} style={styles.inlineImage} />
-
         <View style={styles.selector}>
           <TouchableOpacity
             style={[styles.roleBtn, role === "student" && styles.activeBtn]}
-            onPress={async () => {
-              await clearInfo(); // ✅ 로그인 전 정보 초기화
-              setRole("student");
-            }}
+            onPress={() => setRole("student")}
           >
             <Text style={styles.roleText}>학생</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.roleBtn, role === "teacher" && styles.activeBtn]}
-            onPress={async () => {
-              await clearInfo(); // ✅ 정보 초기화
-              setRole("teacher");
-            }}
+            onPress={() => setRole("teacher")}
           >
             <Text style={styles.roleText}>선생님</Text>
           </TouchableOpacity>
@@ -142,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f2f4f8",
   },
   leftPane: {
-    width: "50%",
+    width: "50%", // ← 절반으로 고정
     height: "100%",
   },
   fullImage: {
@@ -153,7 +134,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   rightPane: {
-    width: "50%",
+    width: "50%", // ← 절반으로 고정
     height: "100%",
     justifyContent: "center",
     padding: 40,
@@ -165,6 +146,12 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     resizeMode: "contain",
     marginBottom: 10,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 30,
   },
   selector: {
     flexDirection: "row",
