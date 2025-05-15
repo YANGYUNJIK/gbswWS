@@ -200,22 +200,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 0,
   },
-  // cheerBannerContainer: {
-  //   width: "100%",
-  //   height: 32,
-  //   overflow: "hidden",
-  //   backgroundColor: "#fff4d6",
-  //   justifyContent: "center",
-  //   paddingHorizontal: 10,
-  //   borderBottomWidth: 1,
-  //   borderColor: "#ffe0a3",
-  // },
-  // cheerBannerText: {
-  //   fontSize: 14,
-  //   fontWeight: "bold",
-  //   color: "#cc8400",
-  //   whiteSpace: "nowrap",
-  // },
   sliderRow: {
     flexDirection: "row",
     alignItems: "center",
