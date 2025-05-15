@@ -63,6 +63,20 @@ io.on("connection", (socket) => {
   });
 });
 
+// 채팅
+io.on("connection", (socket) => {
+  console.log("🟢 Client connected");
+
+  socket.on("chatMessage", (msg) => {
+    io.emit("chatMessage", msg); // 모든 클라이언트에 전송
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 Client disconnected");
+  });
+});
+
+
 // ✅ 서버 실행
 const PORT = process.env.PORT || 3000;
 mongoose.connect(process.env.MONGODB_URI)

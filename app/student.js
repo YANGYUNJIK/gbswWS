@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   banner: {
     width: ITEM_WIDTH,
-    height: 165,
+    height: 185,
     justifyContent: "flex-end",
     alignItems: "flex-end",
     paddingBottom: 8,
