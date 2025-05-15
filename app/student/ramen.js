@@ -1,3 +1,5 @@
+// ✅ RamenScreen.js - 주말에만 신청 가능, 필터 기능 포함
+
 import { useContext, useEffect, useState } from "react";
 import {
   Dimensions,
@@ -21,24 +23,27 @@ const screenWidth = Dimensions.get("window").width;
 const CARD_GAP = 60;
 const CARD_WIDTH = (screenWidth - CARD_GAP * 5) / 4;
 
-export default function SnackScreen() {
+export default function RamenScreen() {
   const { studentName, category } = useContext(StudentInfoContext);
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [filter, setFilter] = useState("all"); // ✅ 필터 상태: all, inStock, soldOut
+  const [filter, setFilter] = useState("all");
+
+  const today = new Date().getDay();
+  const isWeekend = today === 0 || today === 6 || today === 5;
 
   const fetchItems = async () => {
     try {
       const res = await fetch(`${SERVER_URL}/items`);
       if (!res.ok) throw new Error(`서버 응답 오류: ${res.status}`);
       const data = await res.json();
-      const snacks = data.filter((item) => item.type === "snack");
-      setItems(snacks);
+      const ramens = data.filter((item) => item.type === "ramen"); // 오타 수정: ranems -> ramens
+      setItems(ramens);
     } catch (err) {
-      console.error("❌ 간식 목록 불러오기 실패:", err);
+      console.error("❌ 라면 목록 불러오기 실패:", err);
     }
   };
 
@@ -47,6 +52,10 @@ export default function SnackScreen() {
   }, []);
 
   const handleSelect = (item) => {
+    if (!isWeekend) {
+      alert("라면은 주말에만 신청 가능합니다!");
+      return;
+    }
     setSelectedItem(item);
     setQuantity(1);
     setModalVisible(true);
@@ -115,14 +124,16 @@ export default function SnackScreen() {
         <View style={{ position: "relative" }}>
           <Image
             source={{ uri: item.image }}
-            style={[
-              styles.image,
-              isHovered && styles.imageHovered
-            ]}
+            style={[styles.image, isHovered && styles.imageHovered]}
           />
           {isSoldOut && (
             <View style={styles.soldOutBadge}>
               <Text style={styles.soldOutText}>품절</Text>
+            </View>
+          )}
+          {!isWeekend && (
+            <View style={styles.weekendBadge}>
+              <Text style={styles.weekendText}>주말 신청 가능</Text>
             </View>
           )}
         </View>
@@ -133,9 +144,8 @@ export default function SnackScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>• 간식 코너</Text>
+      <Text style={styles.title}>• 라면 코너</Text>
 
-      {/* ✅ 필터 버튼 */}
       <View style={styles.filterContainer}>
         <TouchableOpacity onPress={() => setFilter("all")} style={[styles.filterButton, filter === "all" && styles.activeFilter]}>
           <Text style={styles.filterText}>전체</Text>
@@ -170,11 +180,9 @@ export default function SnackScreen() {
                 <Text style={styles.arrow}>{">"}</Text>
               </TouchableOpacity>
             </View>
-
             <TouchableOpacity onPress={handleSubmit} style={styles.button}>
               <Text style={styles.buttonText}>신청하기</Text>
             </TouchableOpacity>
-
             <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 10 }}>
               <Text style={{ color: "gray" }}>닫기</Text>
             </TouchableOpacity>
@@ -186,130 +194,27 @@ export default function SnackScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f0f4f8",
-    padding: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginVertical: 10,
-  },
-  filterContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  filterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#ccc",
-    marginHorizontal: 4,
-  },
-  activeFilter: {
-    backgroundColor: "#5DBB9D",
-  },
-  filterText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  card: {
-    width: CARD_WIDTH,
-    marginBottom: 35,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    backgroundColor: "#fff",
-    elevation: 2,
-    minHeight: 150,
-    justifyContent: "center",
-  },
-  cardPlaceholder: {
-    width: CARD_WIDTH,
-    marginBottom: 20,
-  },
-  image: {
-    width: 100,
-    height: 100,
-    marginBottom: 8,
-  },
-  imageHovered: {
-    transform: [{ scale: 1.1 }],
-  },
-  name: {
-    textAlign: "center",
-  },
-  soldOutBadge: {
-    position: "absolute",
-    top: 4,
-    left: 4,
-    backgroundColor: "red",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    zIndex: 1,
-  },
-  soldOutText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalCard: {
-    width: 300,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
-  quantityControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  arrow: {
-    fontSize: 28,
-    paddingHorizontal: 20,
-    color: "#4A90E2",
-  },
-  quantityText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    minWidth: 60,
-    textAlign: "center",
-  },
-  button: {
-    backgroundColor: "#5DBB9D",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 100,
-    marginVertical: 6,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-    textAlign: "center",
-  },
+  container: { flex: 1, backgroundColor: "#f0f4f8", padding: 10 },
+  title: { fontSize: 20, fontWeight: "bold", marginVertical: 10 },
+  filterContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 20 },
+  filterButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: "#ccc", marginHorizontal: 4 },
+  activeFilter: { backgroundColor: "#5DBB9D" },
+  filterText: { color: "#fff", fontWeight: "bold" },
+  card: { width: CARD_WIDTH, marginBottom: 35, borderWidth: 1, borderColor: "#ccc", padding: 12, borderRadius: 10, alignItems: "center", backgroundColor: "#fff", elevation: 2, minHeight: 150, justifyContent: "center" },
+  cardPlaceholder: { width: CARD_WIDTH, marginBottom: 20 },
+  image: { width: 100, height: 100, marginBottom: 8 },
+  imageHovered: { transform: [{ scale: 1.1 }] },
+  name: { textAlign: "center" },
+  soldOutBadge: { position: "absolute", top: 4, left: 4, backgroundColor: "red", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, zIndex: 1 },
+  soldOutText: { color: "white", fontSize: 10, fontWeight: "bold" },
+  weekendBadge: { position: "absolute", bottom: 4, right: 4, backgroundColor: "rgba(0,0,0,0.4)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, zIndex: 1 },
+  weekendText: { color: "#fff", fontSize: 10, fontWeight: "bold" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
+  modalCard: { width: 300, backgroundColor: "#fff", borderRadius: 12, padding: 20, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
+  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 12 },
+  quantityControl: { flexDirection: "row", alignItems: "center", marginVertical: 10 },
+  arrow: { fontSize: 28, paddingHorizontal: 20, color: "#4A90E2" },
+  quantityText: { fontSize: 18, fontWeight: "bold", minWidth: 60, textAlign: "center" },
+  button: { backgroundColor: "#5DBB9D", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, alignItems: "center", justifyContent: "center", minWidth: 100, marginVertical: 6 },
+  buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16, textAlign: "center" },
 });

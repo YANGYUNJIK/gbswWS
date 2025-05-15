@@ -146,6 +146,7 @@ function LayoutContent() {
     { label: "🏠 메인", route: "/student" },
     { label: "🥤 음료 신청", route: "/student/drink" },
     { label: "🍪 간식 신청", route: "/student/snack" },
+    { label: "🍜 라면 신청", route: "/student/ramen" },
     { label: "📄 신청 내역", route: "/student/orders" },
     { label: "🚪 로그아웃", route: "/main" },
   ];

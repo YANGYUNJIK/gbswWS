@@ -32,7 +32,7 @@ const rawBannerData = [
   { image: require("../assets/drink.png"), route: "/student/drink", label: "🥤 음료 신청" },
   { image: require("../assets/snack.png"), route: "/student/snack", label: "🍪 간식 신청" },
   { image: require("../assets/report.png"), route: "/student/orders", label: "📄 신청 내역" },
-  { image: require("../assets/test1.jpg"), route: "/banner/4", label: "🛍️ 준비 중" },
+  { image: require("../assets/test1.jpg"), route: "/student/ramen", label: "🛍️🍜 라면 신청 (임시)" },
 ];
 const categoryItems = [
   { label: "게임개발", image: require("../assets/gameG.png"), route: "/category/game" },
@@ -62,10 +62,11 @@ export default function StudentMenu() {
       try {
         const res = await fetch(`${SERVER_URL}/cheer/today`);
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          const shuffled = data.sort(() => 0.5 - Math.random());
-          setCheerMessages(shuffled);
-        }
+        if (Array.isArray(data)) {
+        const fixedMessage = { message: "🎉 오늘도 화이팅!" }; // 고정 메시지
+        const shuffled = data.sort(() => 0.5 - Math.random());
+        setCheerMessages([fixedMessage, ...shuffled]);
+      }
       } catch (error) {
         console.error("응원 메시지 불러오기 실패", error);
       }
@@ -199,22 +200,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 0,
   },
-  cheerBannerContainer: {
-    width: "100%",
-    height: 32,
-    overflow: "hidden",
-    backgroundColor: "#fff4d6",
-    justifyContent: "center",
-    paddingHorizontal: 10,
-    borderBottomWidth: 1,
-    borderColor: "#ffe0a3",
-  },
-  cheerBannerText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#cc8400",
-    whiteSpace: "nowrap",
-  },
+  // cheerBannerContainer: {
+  //   width: "100%",
+  //   height: 32,
+  //   overflow: "hidden",
+  //   backgroundColor: "#fff4d6",
+  //   justifyContent: "center",
+  //   paddingHorizontal: 10,
+  //   borderBottomWidth: 1,
+  //   borderColor: "#ffe0a3",
+  // },
+  // cheerBannerText: {
+  //   fontSize: 14,
+  //   fontWeight: "bold",
+  //   color: "#cc8400",
+  //   whiteSpace: "nowrap",
+  // },
   sliderRow: {
     flexDirection: "row",
     alignItems: "center",
