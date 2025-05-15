@@ -6,6 +6,7 @@ import {
   Dimensions,
   FlatList,
   Keyboard,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -65,6 +66,69 @@ function LayoutContent() {
     setNewMessage("");
   };
 
+  const saveMessagesToStorage = async (messages) => {
+    try {
+      const key = `chat-${todayDate}`;
+      const json = JSON.stringify(messages);
+      if (Platform.OS === "web") {
+        localStorage.setItem(key, json);
+      } else {
+        const AsyncStorage = await import("@react-native-async-storage/async-storage");
+        await AsyncStorage.default.setItem(key, json);
+      }
+    } catch (err) {
+      console.error("메시지 저장 실패:", err);
+    }
+  };
+
+  const loadMessages = async () => {
+    try {
+      const key = `chat-${todayDate}`;
+      let stored;
+      if (Platform.OS === "web") {
+        stored = localStorage.getItem(key);
+      } else {
+        const AsyncStorage = await import("@react-native-async-storage/async-storage");
+        stored = await AsyncStorage.default.getItem(key);
+      }
+      if (stored) {
+        setChatMessages(JSON.parse(stored));
+      }
+    } catch (err) {
+      console.error("메시지 불러오기 실패:", err);
+    }
+  };
+
+  const clearChatMessages = () => {
+    Alert.alert("⚠️ 확인", "모든 채팅을 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          setChatMessages([]);
+          const key = `chat-${todayDate}`;
+          if (Platform.OS === "web") {
+            localStorage.removeItem(key);
+          } else {
+            const AsyncStorage = await import("@react-native-async-storage/async-storage");
+            await AsyncStorage.default.removeItem(key);
+          }
+        },
+      },
+    ]);
+  };
+
+  const deleteSingleMessage = (indexToDelete) => {
+    const updated = chatMessages.filter((_, i) => i !== indexToDelete);
+    setChatMessages(updated);
+    saveMessagesToStorage(updated);
+  };
+
+  useEffect(() => {
+    saveMessagesToStorage(chatMessages);
+  }, [chatMessages]);
+
   useEffect(() => {
     socket.on("chatMessage", (msg) => {
       if (msg.date === todayDate) {
@@ -72,13 +136,39 @@ function LayoutContent() {
         if (!chatVisible) setHasNewChat(true);
       }
     });
-
     return () => socket.off("chatMessage");
   }, [chatVisible]);
 
   useEffect(() => {
-    setChatMessages((prev) => prev.filter((msg) => msg.date === todayDate));
+    if (chatVisible) {
+      loadMessages();
+    }
+  }, [chatVisible]);
+
+  /////
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const key = `chat-${todayDate}`;
+        let stored;
+        if (typeof window !== "undefined") {
+          stored = localStorage.getItem(key);
+        } else {
+          const AsyncStorage = await import("@react-native-async-storage/async-storage");
+          stored = await AsyncStorage.default.getItem(key);
+        }
+        if (stored) {
+          setChatMessages(JSON.parse(stored));
+        }
+      } catch (err) {
+        console.error("메시지 불러오기 실패:", err);
+      }
+    };
+
+    loadMessages();
   }, []);
+
 
   useEffect(() => {
     const targetDate = new Date("2025-09-19");
@@ -161,6 +251,8 @@ function LayoutContent() {
       Alert.alert("❌ 오류", "메시지 등록에 실패했습니다.");
     }
   };
+
+  // 수정 부분 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
   return (
     <>
@@ -246,19 +338,19 @@ function LayoutContent() {
         {(isTeacher || isStudent) && (
           (isTeacher
             ? [
-                { label: "🏠 메인", route: "/teacher" },
-                { label: "📦 간식 관리", route: "/admin/manage" },
-                { label: "📋 신청 관리", route: "/admin/orders" },
-                { label: "📊 대시보드", route: "/admin/dashboard" },
-                { label: "👥 사용자 관리", route: "/admin/users" },
-              ]
+              { label: "🏠 메인", route: "/teacher" },
+              { label: "📦 간식 관리", route: "/admin/manage" },
+              { label: "📋 신청 관리", route: "/admin/orders" },
+              { label: "📊 대시보드", route: "/admin/dashboard" },
+              { label: "👥 사용자 관리", route: "/admin/users" },
+            ]
             : [
-                { label: "🏠 메인", route: "/student" },
-                { label: "🥤 음료 신청", route: "/student/drink" },
-                { label: "🍪 간식 신청", route: "/student/snack" },
-                { label: "🍜 라면 신청", route: "/student/ramen" },
-                { label: "📄 신청 내역", route: "/student/orders" },
-              ]
+              { label: "🏠 메인", route: "/student" },
+              { label: "🥤 음료 신청", route: "/student/drink" },
+              { label: "🍪 간식 신청", route: "/student/snack" },
+              { label: "🍜 라면 신청", route: "/student/ramen" },
+              { label: "📄 신청 내역", route: "/student/orders" },
+            ]
           ).concat({ label: "🚪 로그아웃", route: "/main" }).map(({ label, route }) => (
             <TouchableOpacity
               key={label}
@@ -322,12 +414,20 @@ function LayoutContent() {
               <FlatList
                 data={chatMessages}
                 keyExtractor={(_, i) => i.toString()}
-                renderItem={({ item }) => (
-                  <Text style={{ marginVertical: 2 }}>
-                    <Text style={{ fontWeight: "bold" }}>{item.sender}</Text>: {item.text}
-                  </Text>
+                renderItem={({ item, index }) => (
+                  <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 2 }}>
+                    <Text style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: "bold" }}>{item.sender}</Text>: {item.text}
+                    </Text>
+                    {isTeacher && (
+                      <TouchableOpacity onPress={() => deleteSingleMessage(index)}>
+                        <Text style={{ color: "red", marginLeft: 8 }}>❌</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 )}
               />
+
             </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <TextInput
@@ -350,6 +450,9 @@ function LayoutContent() {
     </>
   );
 }
+
+
+
 
 export default function Layout() {
   return (
