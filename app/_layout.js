@@ -115,7 +115,7 @@ function LayoutContent() {
     setDrawerOpen(true);
     Animated.timing(drawerAnim, {
       toValue: 0,
-      duration: 200,
+      duration: 300,
       useNativeDriver: false,
     }).start();
   };
@@ -123,7 +123,7 @@ function LayoutContent() {
   const closeDrawer = () => {
     Animated.timing(drawerAnim, {
       toValue: -SCREEN_WIDTH * 0.15,
-      duration: 200,
+      duration: 300,
       useNativeDriver: false,
     }).start(() => setDrawerOpen(false));
   };
@@ -233,20 +233,20 @@ function LayoutContent() {
         {(isTeacher || isStudent) && (
           (isTeacher
             ? [
-                { label: "  🏠 메인", route: "/teacher" },
-                { label: "  📦 간식 관리", route: "/admin/manage" },
-                { label: "  📋 신청 관리", route: "/admin/orders" },
-                { label: "  📊 대시보드", route: "/admin/dashboard" },
-                { label: "  👥 사용자 관리", route: "/admin/users" },
+                { label: "🏠 메인", route: "/teacher" },
+                { label: "📦 간식 관리", route: "/admin/manage" },
+                { label: "📋 신청 관리", route: "/admin/orders" },
+                { label: "📊 대시보드", route: "/admin/dashboard" },
+                { label: "👥 사용자 관리", route: "/admin/users" },
               ]
             : [
-                { label: "  🏠 메인", route: "/student" },
-                { label: "  🥤 음료 신청", route: "/student/drink" },
-                { label: "  🍪 간식 신청", route: "/student/snack" },
-                { label: "  🍜 라면 신청", route: "/student/ramen" },
-                { label: "  📄 신청 내역", route: "/student/orders" },
+                { label: "🏠 메인", route: "/student" },
+                { label: "🥤 음료 신청", route: "/student/drink" },
+                { label: "🍪 간식 신청", route: "/student/snack" },
+                { label: "🍜 라면 신청", route: "/student/ramen" },
+                { label: "📄 신청 내역", route: "/student/orders" },
               ]
-          ).concat({ label: "  🚪 로그아웃", route: "/main" }).map(({ label, route }) => (
+          ).concat({ label: "🚪 로그아웃", route: "/main" }).map(({ label, route }) => (
             <TouchableOpacity
               key={label}
               onPress={() => {
