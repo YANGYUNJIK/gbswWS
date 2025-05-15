@@ -48,12 +48,18 @@ function LayoutContent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.4)).current;
 
+  const todayDate = new Date().toISOString().split("T")[0];
+
   const sendMessage = () => {
     if (!newMessage.trim()) return;
+
+    const nickname = isTeacher ? "선생님" : (studentName || "익명");
+
     const msg = {
-      sender: studentName || "익명",
+      sender: nickname,
       text: newMessage.trim(),
       time: new Date().toLocaleTimeString(),
+      date: todayDate,
     };
     socket.emit("chatMessage", msg);
     setNewMessage("");
@@ -61,11 +67,18 @@ function LayoutContent() {
 
   useEffect(() => {
     socket.on("chatMessage", (msg) => {
-      setChatMessages((prev) => [...prev, msg]);
-      if (!chatVisible) setHasNewChat(true);
+      if (msg.date === todayDate) {
+        setChatMessages((prev) => [...prev, msg]);
+        if (!chatVisible) setHasNewChat(true);
+      }
     });
+
     return () => socket.off("chatMessage");
   }, [chatVisible]);
+
+  useEffect(() => {
+    setChatMessages((prev) => prev.filter((msg) => msg.date === todayDate));
+  }, []);
 
   useEffect(() => {
     const targetDate = new Date("2025-09-19");

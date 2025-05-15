@@ -28,11 +28,13 @@ const SERVER_URL =
     ? "http://localhost:3000"
     : "https://gbswws.onrender.com";
 
+//🛍️
+
 const rawBannerData = [
   { image: require("../assets/drink.png"), route: "/student/drink", label: "🥤 음료 신청" },
   { image: require("../assets/snack.png"), route: "/student/snack", label: "🍪 간식 신청" },
+  { image: require("../assets/ramen.jpg"), route: "/student/ramen", label: "🍜 라면 신청" },
   { image: require("../assets/report.png"), route: "/student/orders", label: "📄 신청 내역" },
-  { image: require("../assets/test1.jpg"), route: "/student/ramen", label: "🛍️🍜 라면 신청 (임시)" },
 ];
 const categoryItems = [
   { label: "게임개발", image: require("../assets/gameG.png"), route: "/category/game" },
