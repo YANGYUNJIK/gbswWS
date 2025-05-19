@@ -1,8 +1,11 @@
-// ✅ /app/student/orders.js
 import { useContext, useEffect, useState } from "react";
 import {
-  FlatList, Image,
-  StyleSheet, Text, View
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { io } from "socket.io-client";
 import { StudentInfoContext } from "../../context/StudentInfoContext";
@@ -11,7 +14,6 @@ const SERVER_URL =
   typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "https://gbswws.onrender.com";
-
 
 const socket = io(SERVER_URL);
 
@@ -26,11 +28,32 @@ export default function StudentOrdersScreen() {
       const res = await fetch(`${SERVER_URL}/orders`);
       const data = await res.json();
       const filtered = data.filter(
-        order => order.studentName === studentName && order.userJob === category
+        (order) =>
+          order.studentName === studentName && order.userJob === category
       );
       setOrders(filtered);
     } catch (err) {
       console.error("❌ 주문 불러오기 실패:", err);
+    }
+  };
+
+  const handleCancel = async (orderId) => {
+    const confirm = window.confirm("정말 이 신청을 취소하시겠습니까?");
+    if (!confirm) return;
+
+    try {
+      const res = await fetch(`${SERVER_URL}/orders/${orderId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("✅ 신청이 취소되었습니다.");
+        fetchOrders();
+      } else {
+        alert("❌ 취소에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("❌ 주문 취소 실패:", err);
+      alert("서버 오류로 인해 신청을 취소할 수 없습니다.");
     }
   };
 
@@ -46,7 +69,11 @@ export default function StudentOrdersScreen() {
         updatedOrder.studentName === studentName &&
         updatedOrder.userJob === category
       ) {
-        alert(`📢 '${updatedOrder.menu}' 신청이 '${translateStatus(updatedOrder.status)}' 처리되었습니다.`);
+        // alert(
+        //   `📢 '${updatedOrder.menu}' 신청이 '${translateStatus(
+        //     updatedOrder.status
+        //   )}' 처리되었습니다.`
+        // );
         fetchOrders();
       }
     });
@@ -58,22 +85,41 @@ export default function StudentOrdersScreen() {
 
   const translateStatus = (status) => {
     switch (status) {
-      case "accepted": return "수락됨";
-      case "rejected": return "거절됨";
-      default: return "대기중";
+      case "accepted":
+        return "수락됨";
+      case "rejected":
+        return "거절됨";
+      case "cancelled":
+        return "취소됨"; // ✅ 추가
+      default:
+        return "대기중";
     }
   };
 
+
   const getStatusColor = (status) => {
     switch (status) {
-      case "accepted": return "green";
-      case "rejected": return "red";
-      default: return "gray";
+      case "accepted":
+        return "green";
+      case "rejected":
+        return "red";
+      default:
+        return "gray";
     }
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
+      {/* ✅ 오른쪽 상단에 취소 버튼 배치 */}
+      {item.status === "pending" && (
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => handleCancel(item._id)}
+        >
+          <Text style={styles.cancelText}>취소</Text>
+        </TouchableOpacity>
+      )}
+
       <View style={styles.cardRow}>
         <Image
           source={{ uri: item.image || "https://via.placeholder.com/60" }}
@@ -83,8 +129,12 @@ export default function StudentOrdersScreen() {
           <Text style={styles.menu}>{item.menu}</Text>
           <Text style={styles.detail}>수량: {item.quantity}</Text>
           <View style={styles.statusRow}>
-            <Text style={[styles.status, { color: getStatusColor(item.status) }]}>상태: {translateStatus(item.status)}</Text>
-            <Text style={styles.time}>{new Date(item.createdAt).toLocaleString()}</Text>
+            <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
+              상태: {translateStatus(item.status)}
+            </Text>
+            <Text style={styles.time}>
+              {new Date(item.createdAt).toLocaleString()}
+            </Text>
           </View>
         </View>
       </View>
@@ -161,5 +211,20 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: "#888",
+  },
+  cancelButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#ff5c5c",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    zIndex: 1,
+  },
+  cancelText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 13,
   },
 });
