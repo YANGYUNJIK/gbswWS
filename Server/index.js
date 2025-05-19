@@ -46,7 +46,6 @@ const studentRoutes = require("./routes/students");
 const teacherRoutes = require("./routes/teachers");
 const cheerRoutes = require("./routes/cheer");
 
-
 // ✅ 라우터 등록
 app.use("/items", itemsRoutes);
 app.use("/orders", ordersRoutes);
@@ -54,6 +53,7 @@ app.use("/auth", authRoutes);
 app.use("/students", studentRoutes);
 app.use("/teachers", teacherRoutes);
 app.use("/cheer", cheerRoutes);
+
 
 // ✅ 소켓 연결 감지
 io.on("connection", (socket) => {

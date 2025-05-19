@@ -33,16 +33,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// 학생 수정 (이름, category, grade, number 등)
-// router.put("/:id", async (req, res) => {
-//   try {
-//     const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
-//     res.json({ message: "학생 정보 수정 완료", student: updated });
-//   } catch (err) {
-//     res.status(500).json({ message: "학생 정보 수정 실패" });
-//   }
-// });
-// routes/students.js
 const mongoose = require("mongoose");
 
 router.put("/:id", async (req, res) => {
@@ -72,5 +62,32 @@ router.patch("/:id/reset-password", async (req, res) => {
     res.status(500).json({ message: "비밀번호 초기화 실패" });
   }
 });
+
+// ✅ 비밀번호 변경
+router.patch("/change-password", async (req, res) => {
+  const { id, currentPassword, newPassword } = req.body;
+  console.log("🛠️ 비번 변경 요청:", req.body);
+
+  try {
+    const student = await Student.findOne({ $or: [{ id }, { name: id }] });
+
+    if (!student) {
+      return res.status(404).json({ error: "학생을 찾을 수 없습니다." });
+    }
+
+    if (student.password !== currentPassword) {
+      return res.status(400).json({ error: "현재 비밀번호가 일치하지 않습니다." });
+    }
+
+    student.password = newPassword;
+    await student.save();
+
+    res.json({ message: "비밀번호가 성공적으로 변경되었습니다." });
+  } catch (err) {
+    console.error("비밀번호 변경 실패:", err);
+    res.status(500).json({ error: "서버 오류" });
+  }
+});
+
 
 module.exports = router;

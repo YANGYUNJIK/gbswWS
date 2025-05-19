@@ -1,7 +1,6 @@
-// ✅ UserManagementScreen with Modal-style UI
 import { useEffect, useState } from "react";
 import {
-  Alert, FlatList, Modal,
+  FlatList, Modal,
   StyleSheet, Text, TextInput,
   TouchableOpacity, View
 } from "react-native";
@@ -15,10 +14,14 @@ export default function UserManagementScreen() {
   const [role, setRole] = useState("student");
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
-    id: "", name: "", category: "", grade: "", number: "", department: "",
+    id: "", name: "", category: "", grade: "", number: "", department: "", password: "",
   });
   const [editId, setEditId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const emptyForm = {
+    id: "", name: "", category: "", grade: "", number: "", department: "", password: "",
+  };
 
   const fetchUsers = async () => {
     const res = await fetch(`${SERVER_URL}/${role}s`);
@@ -28,7 +31,7 @@ export default function UserManagementScreen() {
 
   useEffect(() => {
     fetchUsers();
-    setForm({ id: "", name: "", category: "", grade: "", number: "", department: "" });
+    setForm(emptyForm);
     setEditId(null);
   }, [role]);
 
@@ -38,7 +41,7 @@ export default function UserManagementScreen() {
 
   const handleSubmit = async () => {
     if (!form.id || !form.name || !form.category) {
-      return Alert.alert("⚠️ 필수 항목을 입력하세요.");
+      return window.alert("⚠️ 필수 항목을 입력하세요.");
     }
 
     const payload = role === "student"
@@ -46,14 +49,14 @@ export default function UserManagementScreen() {
           ...form,
           grade: Number(form.grade),
           number: Number(form.number),
-          password: "1234",
+          password: form.password || "1234",
         }
       : {
           id: form.id,
           name: form.name,
           category: form.category,
           department: form.department,
-          password: "1234",
+          password: form.password || "1234",
         };
 
     const method = editId ? "PUT" : "POST";
@@ -70,13 +73,13 @@ export default function UserManagementScreen() {
     });
 
     if (res.ok) {
-      Alert.alert(editId ? "✅ 수정 완료" : "✅ 등록 완료");
+      window.alert(editId ? "✅ 수정 완료" : "✅ 등록 완료");
       fetchUsers();
-      setForm({ id: "", name: "", category: "", grade: "", number: "", department: "" });
+      setForm(emptyForm);
       setEditId(null);
       setModalVisible(false);
     } else {
-      Alert.alert("❌ 요청 실패");
+      window.alert("❌ 요청 실패");
     }
   };
 
@@ -97,6 +100,7 @@ export default function UserManagementScreen() {
       grade: user.grade?.toString() || "",
       number: user.number?.toString() || "",
       department: user.department || "",
+      password: "", // 새 비밀번호를 직접 입력할 수 있도록 빈칸
     });
     setModalVisible(true);
   };
@@ -107,9 +111,9 @@ export default function UserManagementScreen() {
     });
 
     if (res.ok) {
-      Alert.alert("🔄 비밀번호 초기화 완료 (1234)");
+      window.alert("🔄 비밀번호 초기화 완료 (1234)");
     } else {
-      Alert.alert("❌ 비밀번호 초기화 실패");
+      window.alert("❌ 비밀번호 초기화 실패");
     }
   };
 
@@ -176,15 +180,26 @@ export default function UserManagementScreen() {
               <TextInput placeholder="부서" value={form.department} onChangeText={(t) => handleInput("department", t)} style={styles.input} />
             )}
 
+            <TextInput
+              placeholder="비밀번호"
+              value={form.password}
+              onChangeText={(t) => handleInput("password", t)}
+              secureTextEntry
+              style={styles.input}
+            />
+
             <TouchableOpacity onPress={handleSubmit} style={styles.addBtn}>
               <Text style={styles.addText}>{editId ? "수정하기" : "등록하기"}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => {
-              setModalVisible(false);
-              setForm({ id: "", name: "", category: "", grade: "", number: "", department: "" });
-              setEditId(null);
-            }} style={{ marginTop: 12, alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                setForm(emptyForm);
+                setEditId(null);
+              }}
+              style={{ marginTop: 12, alignItems: "center" }}
+            >
               <Text style={{ color: "gray" }}>닫기</Text>
             </TouchableOpacity>
           </View>

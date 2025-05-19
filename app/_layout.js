@@ -46,6 +46,10 @@ function LayoutContent() {
   const [newMessage, setNewMessage] = useState("");
   const [hasNewChat, setHasNewChat] = useState(false);
 
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.4)).current;
 
@@ -350,19 +354,25 @@ function LayoutContent() {
               { label: "🍪 간식 신청", route: "/student/snack" },
               { label: "🍜 라면 신청", route: "/student/ramen" },
               { label: "📄 신청 내역", route: "/student/orders" },
+              { label: "🔐 비밀번호 변경", action: "changePassword" },
             ]
-          ).concat({ label: "🚪 로그아웃", route: "/main" }).map(({ label, route }) => (
+          ).concat({ label: "🚪 로그아웃", route: "/main" }).map(({ label, route, action }) => (
             <TouchableOpacity
               key={label}
               onPress={() => {
                 closeDrawer();
-                router.push(route);
+                if (action === "changePassword") {
+                  setShowPasswordModal(true);
+                } else {
+                  router.push(route);
+                }
               }}
               style={{ marginBottom: 20 }}
             >
               <Text style={{ fontSize: 16 }}>{label}</Text>
             </TouchableOpacity>
           ))
+
         )}
       </Animated.View>
 
@@ -447,6 +457,57 @@ function LayoutContent() {
           </View>
         </View>
       )}
+
+      {showPasswordModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>🔐 비밀번호 변경</Text>
+            <TextInput
+              placeholder="현재 비밀번호"
+              secureTextEntry
+              value={currentPw}
+              onChangeText={setCurrentPw}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="새 비밀번호"
+              secureTextEntry
+              value={newPw}
+              onChangeText={setNewPw}
+              style={styles.input}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
+                <Text>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  if (!currentPw || !newPw) return Alert.alert("❗ 모두 입력하세요");
+                  const res = await fetch(`${SERVER_URL}/students/change-password`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      id: studentName,
+                      currentPassword: currentPw,
+                      newPassword: newPw,
+                    }),
+                  });
+                  if (res.ok) {
+                    Alert.alert("✅ 비밀번호 변경 완료");
+                    setShowPasswordModal(false);
+                    setCurrentPw("");
+                    setNewPw("");
+                  } else {
+                    Alert.alert("❌ 현재 비밀번호가 일치하지 않습니다");
+                  }
+                }}
+              >
+                <Text style={{ color: "blue" }}>변경</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </>
   );
 }
@@ -523,5 +584,19 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  // ✅ 스타일 추가
+  passwordButton: {
+    marginTop: 12,
+    backgroundColor: "#007aff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignSelf: "center",
+  },
+  passwordButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
